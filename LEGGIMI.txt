@@ -13,6 +13,13 @@ Installazione sul telefono:
   Android (Chrome): menu a tre puntini > Installa app
   iPhone (Safari): Condividi > Aggiungi alla schermata Home
 
+Preventivo in PDF: scheda Preventivo > Documento per il cliente (prezzi: tutti, solo totale, nessuno)
+  > Salva o condividi PDF. Su telefono si apre il menu di condivisione (WhatsApp, File, e-mail).
+
+Lavori su piu' dispositivi: scheda Lavori > Esporta (crea un file .json da mandare all'altro dispositivo)
+  e, sull'altro dispositivo, Importa lavori. Un lavoro piu' recente aggiorna quello gia' presente,
+  uno piu' vecchio viene aggiunto come copia.
+
 Aggiornare: ricarica index.html su GitHub (Add file > Upload files, stesso nome). Il telefono si aggiorna
 alla prima apertura con internet.
 Se cambi il contenuto di un file diverso da index.html, cambia anche CACHE in sw.js (es. v2).

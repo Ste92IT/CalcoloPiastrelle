@@ -284,6 +284,18 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
 .job .row-actions button { flex: 1; }
 .job.current { border-color: var(--accent); }
 
+/* materiali personalizzati */
+.cx {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+.cx > div { min-width: 0; }
+
 /* barra fissa */
 .bar {
   position: fixed;
@@ -444,6 +456,15 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     </div>
   </section>
   <div class="panel" id="mats"></div>
+  <section class="card" aria-labelledby="h-cx">
+    <div>
+      <h2 id="h-cx">Materiali personalizzati</h2>
+      <p class="hint">Aggiungi quello che serve: silicone, guaina, profili speciali. Il prezzo vale per confezione se ne indichi una, altrimenti per unità.</p>
+    </div>
+    <div class="list" id="customs"></div>
+    <button type="button" class="primary" id="add-custom">+ Aggiungi materiale</button>
+  </section>
+
   <section class="card" aria-labelledby="h-mtot">
     <h2 id="h-mtot">Totale materiali</h2>
     <dl class="results">
@@ -504,6 +525,33 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     <button type="button" id="add-extra">+ Aggiungi voce</button>
   </section>
 
+  <section class="card" aria-labelledby="h-doc">
+    <div>
+      <h2 id="h-doc">Documento per il cliente</h2>
+      <p class="hint">Vale per il PDF e per il testo copiato. Il riepilogo a schermo mostra sempre tutti i prezzi.</p>
+    </div>
+    <div>
+      <label class="label" for="ditta">Nome o ragione sociale</label>
+      <input type="text" class="txt" id="ditta" data-bind="prev.ditta" autocomplete="off">
+    </div>
+    <div>
+      <label class="label" for="contatti">Telefono ed e-mail</label>
+      <input type="text" class="txt" id="contatti" data-bind="prev.contatti" autocomplete="off">
+    </div>
+    <div>
+      <label class="label" for="show">Prezzi nel documento</label>
+      <select id="show" data-bind="prev.show">
+        <option value="tutti">Tutte le voci con prezzo</option>
+        <option value="totale">Voci senza prezzo, solo il totale</option>
+        <option value="nessuno">Nessun prezzo, solo quantità</option>
+      </select>
+    </div>
+    <div>
+      <label class="label" for="note">Note</label>
+      <input type="text" class="txt" id="note" data-bind="prev.note" autocomplete="off">
+    </div>
+  </section>
+
   <section class="card" aria-labelledby="h-pt">
     <h2 id="h-pt">Preventivo</h2>
     <dl class="results">
@@ -516,7 +564,10 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       <dt>IVA</dt><dd id="p-iva">–</dd>
       <dt class="total">Totale</dt><dd class="total" id="p-tot">–</dd>
     </dl>
-    <button type="button" class="primary" id="copy-prev">Copia preventivo</button>
+    <div class="add-row">
+      <button type="button" class="primary" id="make-pdf">Salva o condividi PDF</button>
+      <button type="button" id="copy-prev">Copia preventivo</button>
+    </div>
   </section>
 </div>
 
@@ -531,6 +582,13 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       <button type="button" class="primary" id="save-job">Salva lavoro</button>
       <button type="button" id="new-job">Nuovo lavoro</button>
     </div>
+    <div class="add-row">
+      <button type="button" id="export-current">Esporta lavoro attuale</button>
+      <button type="button" id="import-job">Importa lavori</button>
+      <button type="button" id="export-all">Esporta tutti</button>
+    </div>
+    <input type="file" id="import-file" accept=".json,application/json" multiple hidden>
+    <p class="hint">Esporta crea un file da mandare all'altro dispositivo (WhatsApp, e-mail, File). Lì tocca "Importa lavori" e scegli il file.</p>
     <div class="list" id="jobs"></div>
   </section>
 </div>
@@ -617,6 +675,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   var KEY1 = 'calcolo-piastrelle-v1';
   var JOBS = 'calcolo-piastrelle-lavori-v1';
   var POSE = { dritta: 5, diagonale: 10, spina: 15 };
+  var DEFAULT_NOTE = 'Quantità e consumi indicativi: verificare con le schede tecniche dei prodotti.';
   var uid = 0;
   function nid() { return ++uid; }
 
@@ -684,7 +743,9 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       tw: '60', th: '60', fuga: '3', mqbox: '1,44', prezzo: sample ? '24,90' : '',
       posa: 'dritta', scarto: '5', inclWalls: false, wallH: '2,2',
       mat: defaultMats(sample),
+      custom: sample ? [{ id: nid(), name: 'Silicone sanitario', mode: 'fissa', val: '2', unit: 'pz', pack: '', price: '7' }] : [],
       prev: {
+        ditta: '', contatti: '', show: 'tutti', note: DEFAULT_NOTE,
         posa: sample ? '28' : '', ricarico: '0', iva: '22',
         extras: sample ? [{ id: nid(), desc: 'Demolizione vecchio pavimento', amt: '250' }] : []
       },
@@ -695,6 +756,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   function bumpUid(s) {
     s.rooms.forEach(function (r) { if (r.id > uid) uid = r.id; });
     s.prev.extras.forEach(function (x) { if (x.id > uid) uid = x.id; });
+    (s.custom || []).forEach(function (x) { if (x.id > uid) uid = x.id; });
   }
 
   function fill(d) {
@@ -708,6 +770,9 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     d.prev = Object.assign({}, b.prev, d.prev || {});
     if (!Array.isArray(d.prev.extras)) d.prev.extras = [];
     d.extra = Object.assign({}, b.extra, d.extra || {});
+    d.custom = Array.isArray(d.custom) ? d.custom.map(function (x) {
+      return Object.assign({ id: nid(), name: '', mode: 'fissa', val: '', unit: '', pack: '', price: '' }, x);
+    }) : [];
     d.rooms = (d.rooms || []).map(function (r) {
       return Object.assign({ kind: 'floor', shape: 'rett', name: '', p0: '', p1: '', p2: '', p3: '', minus: false }, r);
     });
@@ -814,9 +879,22 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     return { need: need, packs: packs, k: k, cost: packs * num(m.price) };
   }
 
+  /* materiale personalizzato: quantità fissa oppure consumo al m² sul netto */
+  function customCalc(x, c) {
+    var v = num(x.val), need = x.mode === 'mq' ? c.net * v : v;
+    var pack = num(x.pack), unit = String(x.unit || '').trim();
+    var packs = pack > 0 ? ceilN(need / pack) : 0;
+    var cost = pack > 0 ? packs * num(x.price) : need * num(x.price);
+    var qty = pack > 0
+      ? packs + (packs === 1 ? ' confezione' : ' confezioni') + ' da ' + fmtN(pack) + (unit ? ' ' + unit : '')
+      : fmtN(Math.round(need * 100) / 100) + (unit ? ' ' + unit : '');
+    return { need: need, packs: packs, cost: cost, qty: qty };
+  }
+
   function prevCalc(s, c) {
     var mats = 0;
     MAT_DEFS.forEach(function (d) { mats += matCalc(d.id, s, c).cost; });
+    s.custom.forEach(function (x) { mats += customCalc(x, c).cost; });
     var ric = (c.costo + mats) * num(s.prev.ricarico) / 100;
     var lab = c.net * num(s.prev.posa);
     var ext = 0;
@@ -825,7 +903,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     var iva = imp * num(s.prev.iva) / 100;
     return { tile: c.costo, mats: mats, ric: ric, lab: lab, ext: ext, imp: imp, iva: iva, tot: imp + iva };
   }
-  window.__tiles = { run: function () { var c = calc(S); return { c: c, p: prevCalc(S, c), m: MAT_DEFS.map(function (d) { return [d.id, matCalc(d.id, S, c)]; }) }; } };
+  window.__tiles = { state: function () { return S; }, exportCurrent: function () { saveJob(); return exportJobs([jobEntry()], 'test'); }, importText: importText, cleanState: cleanState, customCalc: customCalc, tables: function () { return [HW.length, HB.length]; }, pdf: function () { return makePdf(); }, model: function () { return docModel(); }, run: function () { var c = calc(S); return { c: c, p: prevCalc(S, c), m: MAT_DEFS.map(function (d) { return [d.id, matCalc(d.id, S, c)]; }) }; } };
 
   /* percorsi dei campi */
   function getPath(o, p) { return p.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
@@ -980,15 +1058,14 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
         '<div class="job-title">' + esc(j.name) + '</div>' +
         '<div class="job-meta">' + (j.client ? esc(j.client) + ' · ' : '') + fmt(c.net, 2) + ' m² · ' + (p.tot > 0 ? eur(p.tot) + ' · ' : '') + when + '</div>' +
         '<div class="row-actions"><button type="button" data-jact="open">Apri</button>' +
+        '<button type="button" data-jact="export">Esporta</button>' +
         '<button type="button" data-jact="del">Elimina</button></div></div>';
     }).join('') || '<p class="hint">Nessun lavoro salvato.</p>';
   }
   function saveJob() {
     var list = readJobs();
     if (!S.jobId) S.jobId = Date.now().toString(36) + nid();
-    var copy = JSON.parse(JSON.stringify(S));
-    copy.isSample = false;
-    var entry = { id: S.jobId, name: S.jobName || S.client || 'Lavoro senza nome', client: S.client, saved: new Date().toISOString(), state: copy };
+    var entry = jobEntry();
     var i = list.findIndex(function (j) { return j.id === S.jobId; });
     if (i >= 0) list[i] = entry; else list.unshift(entry);
     save();
@@ -1002,7 +1079,9 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     b.posa = S.posa; b.scarto = S.scarto; b.wallH = S.wallH;
     b.mat = JSON.parse(JSON.stringify(S.mat));
     b.prev.posa = S.prev.posa; b.prev.ricarico = S.prev.ricarico; b.prev.iva = S.prev.iva;
+    b.prev.ditta = S.prev.ditta; b.prev.contatti = S.prev.contatti; b.prev.show = S.prev.show; b.prev.note = S.prev.note;
     b.extra = JSON.parse(JSON.stringify(S.extra));
+    b.custom = JSON.parse(JSON.stringify(S.custom));
     b.rooms = [{ id: nid(), kind: 'floor', shape: 'rett', name: 'Stanza 1', p0: '', p1: '', p2: '', p3: '', minus: false }];
     S = b; save(); renderAll(); setTab('calc'); toast('Nuovo lavoro');
   });
@@ -1014,6 +1093,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     var list = readJobs();
     var j = list.find(function (x) { return x.id === id; });
     if (!j) return;
+    if (btn.dataset.jact === 'export') { exportJobs([j], j.name); return; }
     if (btn.dataset.jact === 'open') {
       S = fill(JSON.parse(JSON.stringify(j.state)));
       S.jobId = j.id; bumpUid(S); save(); renderAll(); setTab('calc'); toast('Lavoro aperto');
@@ -1027,6 +1107,196 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       clearTimeout(armTimer);
       armTimer = setTimeout(function () { btn.dataset.armed = ''; btn.classList.remove('armed'); btn.textContent = 'Elimina'; }, 3000);
     }
+  });
+
+  /* consegna di un file: menu di condivisione se c'è, altrimenti download */
+  function safeName(s) { return String(s || '').replace(/[^\wÀ-ſ \-]+/g, '').trim() || 'lavoro'; }
+  function deliverFile(blob, name, title, savedMsg) {
+    function download() {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      toast(savedMsg || 'File salvato');
+    }
+    try {
+      var file = new File([blob], name, { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: title }).catch(function (e) { if (!e || e.name !== 'AbortError') download(); });
+        return file;
+      }
+    } catch (e) {}
+    download();
+    return null;
+  }
+
+  /* esportazione e importazione dei lavori */
+  function jobEntry() {
+    var copy = JSON.parse(JSON.stringify(S));
+    copy.isSample = false;
+    return { id: S.jobId, name: S.jobName || S.client || 'Lavoro senza nome', client: S.client, saved: new Date().toISOString(), state: copy };
+  }
+  function exportJobs(jobs, base) {
+    var data = { app: 'calcolo-piastrelle', version: 1, exported: new Date().toISOString(), jobs: jobs };
+    var blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    return deliverFile(blob, safeName(base) + '.json', 'Calcolo Piastrelle', 'File salvato');
+  }
+  /* i file importati non sono affidabili: ogni campo viene controllato e ricostruito */
+  function cleanState(d) {
+    d = d && typeof d === 'object' ? d : {};
+    var b = defaultState(false), o = defaultState(false);
+    function s(v, def) { return (typeof v === 'string' || typeof v === 'number') ? String(v).slice(0, 300) : def; }
+    var own = function (obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); };
+    ['tw', 'th', 'fuga', 'mqbox', 'prezzo', 'scarto', 'wallH', 'jobName', 'client', 'address'].forEach(function (k) { o[k] = s(d[k], b[k]); });
+    o.posa = (d.posa === 'custom' || (typeof d.posa === 'string' && own(POSE, d.posa))) ? d.posa : 'dritta';
+    o.inclWalls = !!d.inclWalls;
+    Object.keys(b.mat).forEach(function (id) {
+      var src = d.mat && typeof d.mat[id] === 'object' && d.mat[id] ? d.mat[id] : {};
+      Object.keys(b.mat[id]).forEach(function (k) { o.mat[id][k] = s(src[k], b.mat[id][k]); });
+    });
+    var pv = d.prev && typeof d.prev === 'object' ? d.prev : {};
+    ['ditta', 'contatti', 'note', 'posa', 'ricarico', 'iva'].forEach(function (k) { o.prev[k] = s(pv[k], b.prev[k]); });
+    o.prev.show = (pv.show === 'totale' || pv.show === 'nessuno') ? pv.show : 'tutti';
+    o.prev.extras = (Array.isArray(pv.extras) ? pv.extras : []).slice(0, 50).map(function (x) {
+      x = x || {};
+      return { id: nid(), desc: s(x.desc, ''), amt: s(x.amt, '') };
+    });
+    var ex = d.extra && typeof d.extra === 'object' ? d.extra : {};
+    Object.keys(b.extra).forEach(function (k) { o.extra[k] = s(ex[k], b.extra[k]); });
+    o.custom = (Array.isArray(d.custom) ? d.custom : []).slice(0, 50).map(function (x) {
+      x = x || {};
+      return { id: nid(), name: s(x.name, ''), mode: x.mode === 'mq' ? 'mq' : 'fissa', val: s(x.val, ''), unit: s(x.unit, ''), pack: s(x.pack, ''), price: s(x.price, '') };
+    });
+    o.rooms = (Array.isArray(d.rooms) ? d.rooms : []).slice(0, 200).map(function (r) {
+      r = r || {};
+      return { id: nid(), kind: r.kind === 'wall' ? 'wall' : 'floor', shape: (typeof r.shape === 'string' && own(SH, r.shape)) ? r.shape : 'rett',
+        name: s(r.name, ''), p0: s(r.p0, ''), p1: s(r.p1, ''), p2: s(r.p2, ''), p3: s(r.p3, ''), minus: !!r.minus };
+    });
+    o.isSample = false; o.jobId = null;
+    return o;
+  }
+  function importText(text, list, res) {
+    var data = JSON.parse(text);
+    if (!data || data.app !== 'calcolo-piastrelle' || !Array.isArray(data.jobs)) throw new Error('formato');
+    data.jobs.slice(0, 200).forEach(function (j) {
+      if (!j || typeof j !== 'object' || !j.state || typeof j.state !== 'object') { res.bad++; return; }
+      var st = cleanState(j.state);
+      var id = (typeof j.id === 'string' && j.id) ? j.id.slice(0, 40) : Date.now().toString(36) + nid();
+      var name = (typeof j.name === 'string' && j.name) ? j.name.slice(0, 120) : (st.jobName || st.client || 'Lavoro importato');
+      var dt = new Date(j.saved), saved = isNaN(dt.getTime()) ? new Date().toISOString() : dt.toISOString();
+      var i = list.findIndex(function (x) { return x.id === id; });
+      if (i >= 0) {
+        var oldT = new Date(list[i].saved).getTime(), newT = new Date(saved).getTime();
+        if (newT === oldT) { res.same++; return; }
+        if (newT < oldT) { id = Date.now().toString(36) + nid(); name = name + ' (copia)'; i = -1; }
+      }
+      st.jobId = id;
+      var entry = { id: id, name: name, client: st.client, saved: saved, state: st };
+      if (i >= 0) { list[i] = entry; res.updated++; res.ids.push(id); }
+      else { list.unshift(entry); if (name.slice(-8) === ' (copia)') res.copies++; else res.added++; }
+    });
+  }
+  function finishImport(res, list) {
+    var ok = res.added + res.updated + res.copies;
+    if (ok > 0) {
+      var saved = writeJobs(list);
+      if (S.jobId && res.ids.indexOf(S.jobId) >= 0) {
+        var cur = list.find(function (x) { return x.id === S.jobId; });
+        if (cur) { S = fill(JSON.parse(JSON.stringify(cur.state))); S.jobId = cur.id; bumpUid(S); save(); renderAll(); }
+      }
+      renderJobs();
+      var parts = [];
+      if (res.added) parts.push(res.added + (res.added === 1 ? ' nuovo' : ' nuovi'));
+      if (res.updated) parts.push(res.updated + (res.updated === 1 ? ' aggiornato' : ' aggiornati'));
+      if (res.copies) parts.push(res.copies + (res.copies === 1 ? ' copia' : ' copie'));
+      if (res.bad) parts.push(res.bad + ' non validi');
+      toast((saved ? 'Importati: ' : 'Non salvati: ') + parts.join(', '));
+    } else if (res.same > 0 && res.bad === 0) { toast('Lavoro già presente'); }
+    else { toast('File non valido'); }
+  }
+  $('export-current').addEventListener('click', function () {
+    saveJob();
+    exportJobs([jobEntry()], S.jobName || S.client || 'lavoro');
+  });
+  $('export-all').addEventListener('click', function () {
+    var l = readJobs();
+    if (!l.length) { toast('Nessun lavoro salvato'); return; }
+    exportJobs(l, 'Calcolo Piastrelle - tutti i lavori');
+  });
+  $('import-job').addEventListener('click', function () { $('import-file').click(); });
+  $('import-file').addEventListener('change', function (e) {
+    var input = e.target, files = Array.prototype.slice.call(input.files || []);
+    if (!files.length) return;
+    var list = readJobs(), res = { added: 0, updated: 0, copies: 0, same: 0, bad: 0, ids: [] }, pending = files.length;
+    function done() {
+      if (--pending > 0) return;
+      input.value = '';
+      finishImport(res, list);
+    }
+    files.forEach(function (f) {
+      if (f.size > 3000000) { res.bad++; done(); return; }
+      var fr = new FileReader();
+      fr.onload = function () {
+        try { importText(String(fr.result), list, res); } catch (err) { res.bad++; }
+        done();
+      };
+      fr.onerror = function () { res.bad++; done(); };
+      fr.readAsText(f);
+    });
+  });
+
+  /* materiali personalizzati */
+  function customHTML(x) {
+    var fisso = x.mode !== 'mq', pre = 'cx' + x.id;
+    return '<div class="cx" data-cid="' + x.id + '">' +
+      '<div class="span2"><label class="label" for="' + pre + 'n">Nome</label>' +
+      '<input type="text" class="name" id="' + pre + 'n" data-cf="name" value="' + esc(x.name) + '" autocomplete="off"></div>' +
+      '<div class="span2"><label class="label" for="' + pre + 'm">Calcolo</label>' +
+      '<select id="' + pre + 'm" data-cf="mode"><option value="fissa"' + (fisso ? ' selected' : '') + '>Quantità fissa</option>' +
+      '<option value="mq"' + (fisso ? '' : ' selected') + '>Consumo al m² (sul netto)</option></select></div>' +
+      '<div><label class="label" for="' + pre + 'v">' + (fisso ? 'Quantità' : 'Consumo per m²') + '</label>' +
+      '<input type="text" id="' + pre + 'v" data-cf="val" inputmode="decimal" value="' + esc(x.val) + '" autocomplete="off"></div>' +
+      '<div><label class="label" for="' + pre + 'u">Unità (kg, pz, m…)</label>' +
+      '<input type="text" class="txt" id="' + pre + 'u" data-cf="unit" value="' + esc(x.unit) + '" autocomplete="off"></div>' +
+      '<div><label class="label" for="' + pre + 'p">Confezione (facoltativa)</label>' +
+      '<input type="text" id="' + pre + 'p" data-cf="pack" inputmode="decimal" value="' + esc(x.pack) + '" autocomplete="off"></div>' +
+      '<div><label class="label" for="' + pre + 'c">Prezzo (€)</label>' +
+      '<input type="text" id="' + pre + 'c" data-cf="price" inputmode="decimal" value="' + esc(x.price) + '" autocomplete="off"></div>' +
+      '<div class="span2 foot"><div class="mat-need" id="cx-s-' + x.id + '"></div>' +
+      '<button type="button" data-cdel aria-label="Elimina ' + esc(x.name || 'materiale') + '">Elimina</button></div></div>';
+  }
+  function renderCustom() {
+    $('customs').innerHTML = S.custom.map(customHTML).join('') || '<p class="hint">Nessun materiale personalizzato.</p>';
+  }
+  function findCustom(row) { return S.custom.find(function (y) { return y.id === Number(row.dataset.cid); }); }
+  $('customs').addEventListener('input', function (e) {
+    var row = e.target.closest('.cx');
+    if (!row || !e.target.dataset.cf || e.target.tagName === 'SELECT') return;
+    var x = findCustom(row);
+    if (!x) return;
+    x[e.target.dataset.cf] = e.target.value;
+    save(); update();
+  });
+  $('customs').addEventListener('change', function (e) {
+    var row = e.target.closest('.cx');
+    if (!row || e.target.dataset.cf !== 'mode') return;
+    var x = findCustom(row);
+    if (!x) return;
+    x.mode = e.target.value;
+    save(); renderCustom(); update();
+  });
+  $('customs').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-cdel]');
+    if (!b) return;
+    var id = Number(b.closest('.cx').dataset.cid);
+    S.custom = S.custom.filter(function (y) { return y.id !== id; });
+    save(); renderCustom(); update();
+  });
+  $('add-custom').addEventListener('click', function () {
+    S.custom.push({ id: nid(), name: '', mode: 'fissa', val: '', unit: '', pack: '', price: '' });
+    save(); renderCustom(); update();
+    var last = $('customs').lastElementChild, inp = last && last.querySelector('[data-cf="name"]');
+    if (inp) inp.focus();
   });
 
   /* campi collegati */
@@ -1081,23 +1351,251 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
         L.push(d.name + ': ' + m.packs + ' ' + d.pack[m.packs === 1 ? 0 : 1] + ' ' + d.packDesc(S.mat[d.id]) + ' (fabbisogno ' + fmt(m.need, 1) + ' ' + d.unit + ')');
       }
     });
+    S.custom.forEach(function (x) {
+      var k = customCalc(x, c);
+      if (k.need > 0) L.push((x.name || 'Materiale') + ': ' + k.qty);
+    });
     return L.join('\n');
   }
+  /* modello del documento: stesse voci per testo e PDF, con o senza prezzi */
+  function docModel() {
+    var c = calc(S), p = prevCalc(S, c), mode = S.prev.show || 'tutti', pr = mode === 'tutti';
+    function nz(v) { return pr && v > 0 ? v : null; }
+    var rows = [];
+    var tq = c.box > 0
+      ? c.scatole + (c.scatole === 1 ? ' scatola' : ' scatole') + ' (' + fmt(c.acq, 2) + ' m²)'
+      : fmt(c.lordo, 2) + ' m²';
+    rows.push({ label: 'Piastrelle ' + fmtN(num(S.tw)) + '×' + fmtN(num(S.th)) + ' cm', qty: tq, amt: nz(p.tile) });
+    MAT_DEFS.forEach(function (d) {
+      var m = matCalc(d.id, S, c);
+      if (m.need > 0 && m.packs > 0) {
+        rows.push({ label: d.name, qty: m.packs + ' ' + d.pack[m.packs === 1 ? 0 : 1] + ' ' + d.packDesc(S.mat[d.id]), amt: nz(m.cost) });
+      }
+    });
+    S.custom.forEach(function (x) {
+      var k = customCalc(x, c);
+      if (k.need > 0) rows.push({ label: x.name || 'Materiale', qty: k.qty, amt: nz(k.cost) });
+    });
+    if (pr && p.ric !== 0) rows.push({ label: 'Ricarico materiali (' + fmtN(num(S.prev.ricarico)) + '%)', qty: '', amt: p.ric });
+    rows.push({ label: 'Posa in opera', qty: fmt(c.net, 2) + ' m²', amt: nz(p.lab) });
+    S.prev.extras.forEach(function (x) {
+      if (x.desc || snum(x.amt) !== 0) rows.push({ label: x.desc || 'Altra voce', qty: '', amt: pr && snum(x.amt) !== 0 ? snum(x.amt) : null });
+    });
+    var surf = S.rooms.filter(function (r) { return areaOf(r) > 0; }).map(function (r) {
+      return { label: (r.minus ? '− ' : '') + (r.name || 'Superficie') + (r.kind === 'wall' ? ' (parete)' : ''), qty: fmt(areaOf(r), 2) + ' m²' };
+    });
+    return {
+      title: mode === 'nessuno' ? 'Computo materiali' : 'Preventivo',
+      mode: mode, rows: rows, surf: surf, c: c, p: p,
+      showTot: mode !== 'nessuno',
+      amtCol: rows.some(function (r) { return r.amt != null; })
+    };
+  }
+
   function prevText() {
-    var c = calc(S), p = prevCalc(S, c);
-    var L = ['Preventivo' + (S.jobName ? ' - ' + S.jobName : '')];
+    var m = docModel(), L = [m.title + (S.jobName ? ' - ' + S.jobName : '')];
+    if (S.prev.ditta) L.push(S.prev.ditta);
     if (S.client) L.push('Cliente: ' + S.client);
     if (S.address) L.push('Cantiere: ' + S.address);
-    L.push('Superficie: ' + fmt(c.net, 2) + ' m²');
-    L.push('Piastrelle: ' + eur(p.tile));
-    L.push('Materiali di posa: ' + eur(p.mats));
-    if (p.ric !== 0) L.push('Ricarico materiali: ' + eur(p.ric));
-    L.push('Manodopera: ' + eur(p.lab));
-    S.prev.extras.forEach(function (x) { if (snum(x.amt) !== 0) L.push((x.desc || 'Altra voce') + ': ' + eur(snum(x.amt))); });
-    L.push('Imponibile: ' + eur(p.imp));
-    L.push('IVA ' + fmtN(num(S.prev.iva)) + '%: ' + eur(p.iva));
-    L.push('Totale: ' + eur(p.tot));
+    L.push('Superficie: ' + fmt(m.c.net, 2) + ' m²');
+    m.rows.forEach(function (r) {
+      L.push(r.label + (r.qty ? ': ' + r.qty : '') + (r.amt != null ? ' - ' + eur(r.amt) : ''));
+    });
+    if (m.showTot) {
+      L.push('Imponibile: ' + eur(m.p.imp));
+      L.push('IVA ' + fmtN(num(S.prev.iva)) + '%: ' + eur(m.p.iva));
+      L.push('Totale: ' + eur(m.p.tot));
+    }
+    if (S.prev.note) L.push(S.prev.note);
     return L.join('\n');
+  }
+
+  /* generatore PDF minimo: solo testo e linee in Helvetica, senza librerie esterne */
+  var HW = [278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+    1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+    333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+    556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584];
+  var HB = [278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278,
+    556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611,
+    975, 722, 722, 722, 722, 667, 611, 778, 722, 278, 556, 722, 611, 833, 722, 778,
+    667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 333, 278, 333, 584, 556,
+    333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556, 278, 889, 611, 611,
+    611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584];
+  var WIN = { '€': 128, '‘': 145, '’': 146, '“': 147, '”': 148, '•': 149, '–': 150, '—': 151, '−': 45 };
+  function MiniPdf() {
+    var K = 72 / 25.4, PW = 595.28, PH = 841.89;
+    var pages = [[]], cur = 0, bold = false, size = 10, tc = [0, 0, 0], dc = [0, 0, 0], lw = 0.57;
+    function rgb(c) { return (c[0] / 255).toFixed(3) + ' ' + (c[1] / 255).toFixed(3) + ' ' + (c[2] / 255).toFixed(3); }
+    function cw(ch) {
+      if (ch === '€') return 556;
+      if (ch === '×') return 584;
+      if (ch === '²') return 333;
+      if (ch === '°') return 400;
+      var code = ch.charCodeAt(0);
+      if (code > 191 && code < 256) code = ch.normalize('NFD').charCodeAt(0);
+      if (code >= 32 && code <= 126) return (bold ? HB : HW)[code - 32];
+      return 556;
+    }
+    function norm(s) { return String(s).replace(/m²/g, 'mq'); }
+    function mw(s) { var w = 0; for (var i = 0; i < s.length; i++) w += cw(s.charAt(i)); return w * size / 1000 / K; }
+    function esc(s) {
+      var o = '';
+      for (var i = 0; i < s.length; i++) {
+        var ch = s.charAt(i), c = WIN[ch] != null ? WIN[ch] : ch.charCodeAt(0);
+        if (c === 40 || c === 41 || c === 92) o += '\\' + String.fromCharCode(c);
+        else if (c >= 32 && c < 127) o += String.fromCharCode(c);
+        else if (c >= 128 && c < 256) o += '\\' + ('00' + c.toString(8)).slice(-3);
+        else o += '?';
+      }
+      return o;
+    }
+    return {
+      setFont: function (f, style) { bold = style === 'bold'; },
+      setFontSize: function (s) { size = s; },
+      setTextColor: function (r, g, b) { tc = [r, g, b]; },
+      setDrawColor: function (r, g, b) { dc = [r, g, b]; },
+      setLineWidth: function (w) { lw = w * K; },
+      line: function (x1, y1, x2, y2) {
+        pages[cur].push(rgb(dc) + ' RG ' + lw.toFixed(2) + ' w ' + (x1 * K).toFixed(2) + ' ' + (PH - y1 * K).toFixed(2) +
+          ' m ' + (x2 * K).toFixed(2) + ' ' + (PH - y2 * K).toFixed(2) + ' l S');
+      },
+      text: function (t, x, y, o) {
+        var ls = Array.isArray(t) ? t : [t], lh = size * 1.15 / K, right = o && o.align === 'right';
+        ls.forEach(function (s, i) {
+          s = norm(s);
+          var xx = right ? x - mw(s) : x;
+          pages[cur].push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + rgb(tc) + ' rg 1 0 0 1 ' +
+            (xx * K).toFixed(2) + ' ' + (PH - (y + i * lh) * K).toFixed(2) + ' Tm (' + esc(s) + ') Tj ET');
+        });
+      },
+      splitTextToSize: function (t, w) {
+        var out = [];
+        norm(t).split('\n').forEach(function (par) {
+          var line = '';
+          par.split(' ').forEach(function (word) {
+            while (mw(word) > w && word.length > 1) {
+              var k = word.length - 1;
+              while (k > 1 && mw(word.slice(0, k)) > w) k--;
+              if (line) { out.push(line); line = ''; }
+              out.push(word.slice(0, k)); word = word.slice(k);
+            }
+            var test = line ? line + ' ' + word : word;
+            if (mw(test) <= w || !line) line = test; else { out.push(line); line = word; }
+          });
+          out.push(line);
+        });
+        return out;
+      },
+      addPage: function () { pages.push([]); cur = pages.length - 1; },
+      getNumberOfPages: function () { return pages.length; },
+      setPage: function (i) { cur = i - 1; },
+      output: function () {
+        var objs = [], n = pages.length, kids = [];
+        for (var i = 0; i < n; i++) kids.push((5 + i * 2) + ' 0 R');
+        objs.push('<< /Type /Catalog /Pages 2 0 R >>');
+        objs.push('<< /Type /Pages /Kids [' + kids.join(' ') + '] /Count ' + n + ' >>');
+        objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+        objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+        pages.forEach(function (ops, i) {
+          var content = ops.join('\n');
+          objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PW + ' ' + PH + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + (6 + i * 2) + ' 0 R >>');
+          objs.push('<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream');
+        });
+        var out = '%PDF-1.4\n', offs = [];
+        objs.forEach(function (o, i) { offs.push(out.length); out += (i + 1) + ' 0 obj\n' + o + '\nendobj\n'; });
+        var xr = out.length;
+        out += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n';
+        offs.forEach(function (o) { out += ('0000000000' + o).slice(-10) + ' 00000 n \n'; });
+        out += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF';
+        var bytes = new Uint8Array(out.length);
+        for (var k = 0; k < out.length; k++) bytes[k] = out.charCodeAt(k) & 255;
+        return new Blob([bytes], { type: 'application/pdf' });
+      }
+    };
+  }
+
+  /* PDF generato sul dispositivo, poi condiviso o scaricato */
+  function makePdf() {
+    var J = MiniPdf;
+    var m = docModel(), pv = S.prev;
+    var doc = new J({ unit: 'mm', format: 'a4' });
+    var M = 16, R = 194, y = 18;
+    var FG = [24, 34, 45], MU = [91, 104, 119], AC = [31, 95, 168], LN = [211, 218, 226];
+    function color(c) { doc.setTextColor(c[0], c[1], c[2]); }
+    function need(h) { if (y + h > 278) { doc.addPage(); y = 18; } }
+    function rule() { doc.setDrawColor(LN[0], LN[1], LN[2]); doc.setLineWidth(0.2); doc.line(M, y, R, y); }
+    function para(text, width, size, col) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(size); color(col);
+      var ls = doc.splitTextToSize(text, width);
+      need(ls.length * (size * 0.45) + 2);
+      doc.text(ls, M, y);
+      y += ls.length * (size * 0.45) + 1.5;
+    }
+    function head(t) {
+      need(16); y += 4;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11); color(FG);
+      doc.text(t, M, y); y += 2; rule(); y += 5;
+    }
+    function line(label, qty, amt, bold, cols3) {
+      var lw = cols3 ? (qty ? 78 : 128) : (qty ? 100 : R - M);
+      var ls = doc.splitTextToSize(label, lw);
+      var qs = qty ? doc.splitTextToSize(qty, cols3 ? 56 : R - M - lw - 4) : [''];
+      var n = Math.max(ls.length, qs.length);
+      need(n * 4.6 + 2);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(10); color(FG);
+      doc.text(ls, M, y);
+      if (qty) { if (cols3) doc.text(qs, M + 82, y); else doc.text(qs, R, y, { align: 'right' }); }
+      if (amt != null) doc.text(eur(amt), R, y, { align: 'right' });
+      y += n * 4.6 + 1.6;
+    }
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13); color(FG);
+    doc.text(pv.ditta || '', M, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); color(MU);
+    doc.text(new Date().toLocaleDateString('it-IT'), R, y, { align: 'right' });
+    y += 5;
+    if (pv.contatti) { doc.text(doc.splitTextToSize(pv.contatti, 130), M, y); y += 5; }
+    y += 2; rule(); y += 11;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); color(AC);
+    doc.text(m.title, M, y); y += 7;
+    if (S.jobName) { doc.setFontSize(11); color(FG); doc.text(doc.splitTextToSize(S.jobName, R - M), M, y); y += 6; }
+    y += 1;
+    if (S.client) para('Cliente: ' + S.client, R - M, 10, FG);
+    if (S.address) para('Cantiere: ' + S.address, R - M, 10, FG);
+
+    if (m.surf.length) {
+      head('Superfici');
+      m.surf.forEach(function (r) { line(r.label, r.qty, null, false, false); });
+      line('Superficie netta', fmt(m.c.net, 2) + ' m²', null, true, false);
+      line('Scarto ' + fmt(m.c.pct, 1) + '%', fmt(m.c.lordo - m.c.net, 2) + ' m²', null, false, false);
+      line('Superficie con scarto', fmt(m.c.lordo, 2) + ' m²', null, true, false);
+    }
+
+    head(m.mode === 'nessuno' ? 'Materiali e lavorazioni' : 'Dettaglio');
+    m.rows.forEach(function (r) { line(r.label, r.qty, r.amt, false, m.amtCol); });
+
+    if (m.showTot) {
+      need(30); y += 1; rule(); y += 6;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); color(FG);
+      doc.text('Imponibile', M + 110, y); doc.text(eur(m.p.imp), R, y, { align: 'right' }); y += 5.5;
+      doc.text('IVA ' + fmtN(num(pv.iva)) + '%', M + 110, y); doc.text(eur(m.p.iva), R, y, { align: 'right' }); y += 7;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(13); color(AC);
+      doc.text('Totale', M + 110, y); doc.text(eur(m.p.tot), R, y, { align: 'right' }); y += 8;
+    }
+    if (pv.note) { y += 4; para(pv.note, R - M, 9, MU); }
+
+    var pages = doc.getNumberOfPages();
+    for (var i = 1; i <= pages; i++) {
+      doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(MU);
+      doc.text('Pagina ' + i + ' di ' + pages, 105, 289, { align: 'center' });
+    }
+
+    var base = (S.jobName || S.client || 'lavoro').replace(/[^\wÀ-ſ \-]+/g, '').trim() || 'lavoro';
+    var name = m.title + ' - ' + base + '.pdf';
+    return deliverFile(doc.output('blob'), name, m.title, 'PDF salvato');
   }
   var tt;
   function toast(msg) {
@@ -1123,6 +1621,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   $('copy-calc').addEventListener('click', function () { copyText(calcText()); });
   $('copy-mat').addEventListener('click', function () { copyText(matText()); });
   $('copy-prev').addEventListener('click', function () { copyText(prevText()); });
+  $('make-pdf').addEventListener('click', function () { makePdf(); });
 
   /* schede */
   function setTab(name) {
@@ -1178,6 +1677,10 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       setT('m-need-' + d.id, need);
       setT('m-cost-' + d.id, num(S.mat[d.id].price) > 0 && m.packs > 0 ? 'Costo: ' + eur(m.cost) : 'Inserisci il prezzo per avere il costo.');
     });
+    S.custom.forEach(function (x) {
+      var k = customCalc(x, c);
+      setT('cx-s-' + x.id, (k.need > 0 ? k.qty : 'Inserisci una quantità') + (k.cost > 0 ? ' · ' + eur(k.cost) : ''));
+    });
     setT('m-tot', eur(p.mats));
     setT('m-tile', eur(p.tile));
     setT('m-all', eur(p.mats + p.tile));
@@ -1205,7 +1708,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   }
 
   function renderAll() {
-    setInputs(); renderRooms('floor'); renderRooms('wall'); renderExtras(); renderJobs(); update();
+    setInputs(); renderRooms('floor'); renderRooms('wall'); renderCustom(); renderExtras(); renderJobs(); update();
   }
 
   wireRooms('floor');
