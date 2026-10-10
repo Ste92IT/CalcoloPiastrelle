@@ -1,0 +1,18 @@
+CALCOLO PIASTRELLE - pacchetto per GitHub Pages
+
+File (vanno caricati tutti, nella stessa cartella):
+  index.html, manifest.webmanifest, sw.js, icon-192.png, icon-512.png, apple-touch-icon.png
+
+1. Su github.com crea un repository pubblico (per esempio "calcolo-piastrelle").
+2. Add file > Upload files: trascina i 6 file (non lo zip: prima estrailo).
+3. Commit changes.
+4. Settings > Pages > Source: "Deploy from a branch", branch main, cartella / (root), Save.
+5. Dopo 1-2 minuti il sito e' su https://NOMEUTENTE.github.io/calcolo-piastrelle/
+
+Installazione sul telefono:
+  Android (Chrome): menu a tre puntini > Installa app
+  iPhone (Safari): Condividi > Aggiungi alla schermata Home
+
+Aggiornare: ricarica index.html su GitHub (Add file > Upload files, stesso nome). Il telefono si aggiorna
+alla prima apertura con internet.
+Se cambi il contenuto di un file diverso da index.html, cambia anche CACHE in sw.js (es. v2).

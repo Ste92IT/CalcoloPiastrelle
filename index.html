@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F5FA8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Piastrelle">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>Calcolo Piastrelle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: colonna singola da telefono, cinque schede di lavoro, totale sempre visibile in barra fissa in basso */
+:root {
+  --bg: #EEF1F4;
+  --surface: #FFFFFF;
+  --fg: #18222D;
+  --muted: #5B6877;
+  --line: #D3DAE2;
+  --accent: #1F5FA8;
+  --accent-fg: #FFFFFF;
+  --accent-soft: #E1ECF8;
+  --minus: #B4452F;
+  --minus-soft: #F8E5E0;
+  --font-display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11171E;
+    --surface: #1A222B;
+    --fg: #E6ECF2;
+    --muted: #98A5B3;
+    --line: #2B3541;
+    --accent: #6AA6E8;
+    --accent-fg: #0B1A2B;
+    --accent-soft: #1D2D42;
+    --minus: #F08A73;
+    --minus-soft: #3A2420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11171E;
+  --surface: #1A222B;
+  --fg: #E6ECF2;
+  --muted: #98A5B3;
+  --line: #2B3541;
+  --accent: #6AA6E8;
+  --accent-fg: #0B1A2B;
+  --accent-soft: #1D2D42;
+  --minus: #F08A73;
+  --minus-soft: #3A2420;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.45;
+  padding-inline: 16px;
+  padding-block: 0 120px;
+}
+.wrap { max-width: 640px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; padding-top: 14px; }
+.panel { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+
+/* testata con fughe */
+.top {
+  margin-inline: -16px;
+  padding: 22px 16px 18px;
+  background-color: var(--accent-soft);
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  border-bottom: 1px solid var(--line);
+}
+.top-in { max-width: 640px; margin-inline: auto; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  text-wrap: balance;
+}
+.sub { margin: 0; color: var(--muted); font-size: 0.95rem; max-width: 46ch; }
+
+/* schede */
+.tabs {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  margin-inline: -16px;
+  padding: 8px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.tabs-in { display: flex; gap: 6px; width: max-content; margin-inline: auto; }
+.tabs button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  background: var(--surface);
+}
+.tabs button[aria-selected="true"] {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+section.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  margin: 0;
+}
+.hint { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+input[type="text"], select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  min-height: 44px;
+}
+select { font-family: var(--font-body); }
+input.name, input.txt { font-family: var(--font-body); font-weight: 500; }
+input:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.check { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.check input { width: 22px; height: 22px; accent-color: var(--accent); flex: 0 0 auto; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  padding: 8px 14px;
+}
+button.primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+button.armed { background: var(--minus); color: #fff; border-color: var(--minus); }
+button:active { transform: translateY(1px); }
+
+/* righe superficie */
+.rooms { display: flex; flex-direction: column; gap: 10px; }
+.room {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+  min-width: 0;
+}
+.room.minus { border-left-color: var(--minus); background: var(--minus-soft); }
+.span2 { grid-column: 1 / -1; min-width: 0; }
+.room > div { min-width: 0; }
+.foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.area {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.row-actions { display: flex; gap: 8px; }
+.row-actions button { min-height: 40px; font-size: 0.9rem; }
+.room.minus .row-actions .sign { color: var(--minus); border-color: var(--minus); }
+.sign-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-right: 6px;
+}
+.room.minus .sign-pill { background: transparent; color: var(--minus); border: 1px solid var(--minus); }
+.add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.add-row button { flex: 1 1 150px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid2 > div { min-width: 0; }
+.sample {
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+/* risultati */
+dl.results { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 0; }
+dl.results dt, dl.results dd { margin: 0; padding: 9px 0; border-bottom: 1px solid var(--line); }
+dl.results dt { color: var(--muted); }
+dl.results dd {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-weight: 500;
+  padding-left: 12px;
+}
+dl.results dt.strong { color: var(--fg); font-weight: 600; }
+dl.results dd.strong { color: var(--accent); }
+dl.results dt.total { color: var(--fg); font-weight: 700; font-size: 1.1rem; border-bottom: 0; }
+dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem; border-bottom: 0; }
+.note { font-size: 0.82rem; color: var(--muted); margin: 0; }
+
+/* materiali */
+.mat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.mat-packs { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.mat-need { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; margin: 0; }
+
+/* voci extra e lavori salvati */
+.list { display: flex; flex-direction: column; gap: 10px; }
+.xrow { display: grid; grid-template-columns: 1fr 110px auto; gap: 8px; align-items: end; }
+.xrow > div { min-width: 0; }
+.xrow button { min-height: 44px; }
+.job {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.job-title { font-weight: 600; overflow-wrap: anywhere; }
+.job-meta { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.job .row-actions button { flex: 1; }
+.job.current { border-color: var(--accent); }
+
+/* barra fissa */
+.bar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 6;
+}
+.bar-in { max-width: 640px; margin-inline: auto; display: flex; align-items: center; gap: 12px; }
+.bar-main { flex: 1; min-width: 0; }
+.bar-big { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.bar-small { font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar button { white-space: nowrap; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: var(--fg);
+  color: var(--bg);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  max-width: calc(100% - 32px);
+  z-index: 7;
+}
+@media (prefers-reduced-motion: reduce) { button:active { transform: none; } }
+</style>
+
+</head>
+<body>
+<div class="top"><div class="top-in">
+  <h1>Calcolo Piastrelle</h1>
+  <p class="sub">Metri quadri, scarto, scatole, materiali e preventivo per pavimenti e rivestimenti.</p>
+</div></div>
+
+<nav class="tabs" aria-label="Sezioni"><div class="tabs-in" role="tablist">
+  <button type="button" role="tab" data-tab="calc" aria-selected="true">Calcolo</button>
+  <button type="button" role="tab" data-tab="mat" aria-selected="false">Materiali</button>
+  <button type="button" role="tab" data-tab="prev" aria-selected="false">Preventivo</button>
+  <button type="button" role="tab" data-tab="jobs" aria-selected="false">Lavori</button>
+  <button type="button" role="tab" data-tab="extra" aria-selected="false">Extra</button>
+</div></nav>
+
+<main class="wrap">
+
+<!-- CALCOLO -->
+<div class="panel" data-panel="calc">
+
+  <section class="card" aria-labelledby="h-floor">
+    <div>
+      <h2 id="h-floor">Pavimento</h2>
+      <p class="hint">Misure in metri. Scegli la forma e usa "Sottrai" per pilastri e rientranze.</p>
+    </div>
+    <div id="sample" class="sample" hidden>Misure e prezzi di esempio: sostituiscili con quelli del cantiere.</div>
+    <div class="rooms" id="floors"></div>
+    <div class="add-row">
+      <button type="button" class="primary" id="add-floor">+ Aggiungi superficie</button>
+      <button type="button" id="add-floor-minus">− Area da sottrarre</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-wall">
+    <div>
+      <h2 id="h-wall">Pareti</h2>
+      <p class="hint">Per rivestimenti in bagno e cucina. Inserisci anche porte e finestre come aree da sottrarre.</p>
+    </div>
+    <label class="check"><input type="checkbox" id="inclWalls" data-bind="inclWalls"> Includi le pareti nel calcolo (stessa piastrella del pavimento)</label>
+    <div class="grid2">
+      <div>
+        <label class="label" for="wallH">Altezza rivestimento (m)</label>
+        <input type="text" id="wallH" data-bind="wallH" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <div class="rooms" id="walls"></div>
+    <div class="add-row">
+      <button type="button" class="primary" id="wall-perim">Pareti dal perimetro delle stanze</button>
+      <button type="button" id="add-wall">+ Parete</button>
+      <button type="button" id="add-wall-minus">− Porta o finestra</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-tile">
+    <h2 id="h-tile">Piastrella</h2>
+    <div class="grid2">
+      <div>
+        <label class="label" for="tw">Larghezza (cm)</label>
+        <input type="text" id="tw" data-bind="tw" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="th">Altezza (cm)</label>
+        <input type="text" id="th" data-bind="th" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="fuga">Fuga (mm)</label>
+        <input type="text" id="fuga" data-bind="fuga" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="mqbox">Mq per scatola</label>
+        <input type="text" id="mqbox" data-bind="mqbox" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="prezzo">Prezzo (€/mq)</label>
+        <input type="text" id="prezzo" data-bind="prezzo" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-posa">
+    <div>
+      <h2 id="h-posa">Posa e scarto</h2>
+      <p class="hint">Lo scarto cambia con il tipo di posa. Puoi scegliere un valore tuo.</p>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="label" for="posa">Tipo di posa</label>
+        <select id="posa" data-bind="posa">
+          <option value="dritta">Dritta (5%)</option>
+          <option value="diagonale">Diagonale (10%)</option>
+          <option value="spina">Spina di pesce (15%)</option>
+          <option value="custom">Personalizzato</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="scarto">Scarto (%)</label>
+        <input type="text" id="scarto" data-bind="scarto" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-ris">
+    <h2 id="h-ris">Riepilogo piastrelle</h2>
+    <dl class="results">
+      <dt>Pavimento netto</dt><dd id="r-floor">–</dd>
+      <dt>Pareti nette</dt><dd id="r-wall">–</dd>
+      <dt>Superficie netta</dt><dd id="r-net">–</dd>
+      <dt>Scarto applicato</dt><dd id="r-pct">–</dd>
+      <dt>Superficie con scarto</dt><dd id="r-lordo">–</dd>
+      <dt>Piastrelle (fuga inclusa)</dt><dd id="r-pezzi">–</dd>
+      <dt class="strong">Scatole da ordinare</dt><dd class="strong" id="r-box">–</dd>
+      <dt>Mq acquistati</dt><dd id="r-acq">–</dd>
+      <dt>In più rispetto al netto</dt><dd id="r-extra">–</dd>
+      <dt>Costo piastrelle</dt><dd id="r-costo">–</dd>
+    </dl>
+    <p class="note" id="r-note"></p>
+    <button type="button" id="copy-calc">Copia riepilogo</button>
+  </section>
+</div>
+
+<!-- MATERIALI -->
+<div class="panel" data-panel="mat" hidden>
+  <section class="card">
+    <div>
+      <h2>Materiali di posa</h2>
+      <p class="hint">I consumi sono indicativi: cambiano da prodotto a prodotto. Controlla la scheda tecnica e modifica i valori.</p>
+    </div>
+  </section>
+  <div class="panel" id="mats"></div>
+  <section class="card" aria-labelledby="h-mtot">
+    <h2 id="h-mtot">Totale materiali</h2>
+    <dl class="results">
+      <dt>Materiali di posa</dt><dd id="m-tot">–</dd>
+      <dt>Piastrelle</dt><dd id="m-tile">–</dd>
+      <dt class="total">Totale materiali</dt><dd class="total" id="m-all">–</dd>
+    </dl>
+    <button type="button" id="copy-mat">Copia lista materiali</button>
+  </section>
+</div>
+
+<!-- PREVENTIVO -->
+<div class="panel" data-panel="prev" hidden>
+  <section class="card" aria-labelledby="h-cli">
+    <h2 id="h-cli">Cliente e cantiere</h2>
+    <div>
+      <label class="label" for="client">Cliente</label>
+      <input type="text" class="txt" id="client" data-bind="client" autocomplete="off">
+    </div>
+    <div>
+      <label class="label" for="address">Indirizzo del cantiere</label>
+      <input type="text" class="txt" id="address" data-bind="address" autocomplete="off">
+    </div>
+    <div>
+      <label class="label" for="jobName">Nome del lavoro</label>
+      <input type="text" class="txt" id="jobName" data-bind="jobName" autocomplete="off">
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="h-lab">
+    <div>
+      <h2 id="h-lab">Manodopera e ricarichi</h2>
+      <p class="hint">La posa si calcola sui metri quadri netti.</p>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="label" for="posaEur">Posa (€/mq)</label>
+        <input type="text" id="posaEur" data-bind="prev.posa" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="ricarico">Ricarico materiali (%)</label>
+        <input type="text" id="ricarico" data-bind="prev.ricarico" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="iva">IVA (%)</label>
+        <input type="text" id="iva" data-bind="prev.iva" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <p class="note">Controlla l'aliquota IVA corretta per il lavoro con il tuo commercialista.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-ext">
+    <div>
+      <h2 id="h-ext">Altre voci</h2>
+      <p class="hint">Demolizione, massetto, sigillature, trasporto. Un importo negativo vale come sconto.</p>
+    </div>
+    <div class="list" id="extras"></div>
+    <button type="button" id="add-extra">+ Aggiungi voce</button>
+  </section>
+
+  <section class="card" aria-labelledby="h-pt">
+    <h2 id="h-pt">Preventivo</h2>
+    <dl class="results">
+      <dt>Piastrelle</dt><dd id="p-tile">–</dd>
+      <dt>Materiali di posa</dt><dd id="p-mat">–</dd>
+      <dt>Ricarico materiali</dt><dd id="p-ric">–</dd>
+      <dt>Manodopera</dt><dd id="p-lab">–</dd>
+      <dt>Altre voci</dt><dd id="p-ext">–</dd>
+      <dt class="strong">Imponibile</dt><dd class="strong" id="p-imp">–</dd>
+      <dt>IVA</dt><dd id="p-iva">–</dd>
+      <dt class="total">Totale</dt><dd class="total" id="p-tot">–</dd>
+    </dl>
+    <button type="button" class="primary" id="copy-prev">Copia preventivo</button>
+  </section>
+</div>
+
+<!-- LAVORI -->
+<div class="panel" data-panel="jobs" hidden>
+  <section class="card" aria-labelledby="h-jobs">
+    <div>
+      <h2 id="h-jobs">Lavori salvati</h2>
+      <p class="hint">I lavori restano nel browser di questo dispositivo.</p>
+    </div>
+    <div class="add-row">
+      <button type="button" class="primary" id="save-job">Salva lavoro</button>
+      <button type="button" id="new-job">Nuovo lavoro</button>
+    </div>
+    <div class="list" id="jobs"></div>
+  </section>
+</div>
+
+<!-- EXTRA -->
+<div class="panel" data-panel="extra" hidden>
+  <section class="card" aria-labelledby="h-pend">
+    <div>
+      <h2 id="h-pend">Pendenza (doccia, terrazzo)</h2>
+      <p class="hint">Dislivello da ottenere su una lunghezza data.</p>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="label" for="pL">Lunghezza (m)</label>
+        <input type="text" id="pL" data-bind="extra.pL" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="pPct">Pendenza (%)</label>
+        <input type="text" id="pPct" data-bind="extra.pPct" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <dl class="results"><dt class="strong">Dislivello</dt><dd class="strong" id="x-pend">–</dd></dl>
+  </section>
+
+  <section class="card" aria-labelledby="h-grad">
+    <div>
+      <h2 id="h-grad">Gradini</h2>
+      <p class="hint">Piastrelle di alzata e pedata. Lo scarto segue la posa scelta.</p>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="label" for="gN">Numero gradini</label>
+        <input type="text" id="gN" data-bind="extra.gN" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="gW">Larghezza (cm)</label>
+        <input type="text" id="gW" data-bind="extra.gW" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="gAl">Alzata (cm)</label>
+        <input type="text" id="gAl" data-bind="extra.gAl" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label class="label" for="gPe">Pedata (cm)</label>
+        <input type="text" id="gPe" data-bind="extra.gPe" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <dl class="results">
+      <dt>Superficie netta</dt><dd id="x-grad">–</dd>
+      <dt class="strong">Con scarto</dt><dd class="strong" id="x-grad-s">–</dd>
+      <dt>Bordo dei gradini</dt><dd id="x-grad-ml">–</dd>
+    </dl>
+  </section>
+
+  <section class="card" aria-labelledby="h-pz">
+    <div>
+      <h2 id="h-pz">Da pezzi a mq per scatola</h2>
+      <p class="hint">Se sulla scatola trovi solo il numero di pezzi. Usa le misure della piastrella inserite in Calcolo.</p>
+    </div>
+    <div>
+      <label class="label" for="pzBox">Pezzi per scatola</label>
+      <input type="text" id="pzBox" data-bind="extra.pzBox" inputmode="decimal" autocomplete="off">
+    </div>
+    <dl class="results"><dt class="strong">Mq per scatola</dt><dd class="strong" id="x-pz">–</dd></dl>
+  </section>
+</div>
+
+</main>
+
+<div class="bar" role="status" aria-live="polite">
+  <div class="bar-in">
+    <div class="bar-main">
+      <div class="bar-big" id="b-box">–</div>
+      <div class="bar-small" id="b-sub">–</div>
+    </div>
+    <button type="button" class="primary" id="b-go">Preventivo</button>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  var KEY = 'calcolo-piastrelle-v2';
+  var KEY1 = 'calcolo-piastrelle-v1';
+  var JOBS = 'calcolo-piastrelle-lavori-v1';
+  var POSE = { dritta: 5, diagonale: 10, spina: 15 };
+  var uid = 0;
+  function nid() { return ++uid; }
+
+  /* forme */
+  var SH = {
+    rett: { label: 'Rettangolo', f: ['Lunghezza (m)', 'Larghezza (m)'],
+      area: function (p) { return p[0] * p[1]; },
+      per: function (p) { return 2 * (p[0] + p[1]); } },
+    elle: { label: 'Forma a L', f: ['Lungh. totale (m)', 'Largh. totale (m)', 'Lungh. rientro (m)', 'Largh. rientro (m)'],
+      area: function (p) { return Math.max(0, p[0] * p[1] - p[2] * p[3]); },
+      per: function (p) { return 2 * (p[0] + p[1]); } },
+    trap: { label: 'Trapezio', f: ['Base maggiore (m)', 'Base minore (m)', 'Altezza (m)'],
+      area: function (p) { return (p[0] + p[1]) / 2 * p[2]; },
+      per: function (p) { return p[0] + p[1] + 2 * Math.sqrt(p[2] * p[2] + Math.pow((p[0] - p[1]) / 2, 2)); } },
+    tri: { label: 'Triangolo', f: ['Base (m)', 'Altezza (m)'],
+      area: function (p) { return p[0] * p[1] / 2; },
+      per: function (p) { return p[0] + 2 * Math.sqrt(p[1] * p[1] + Math.pow(p[0] / 2, 2)); } },
+    cerc: { label: 'Cerchio', f: ['Diametro (m)'],
+      area: function (p) { return Math.PI * Math.pow(p[0] / 2, 2); },
+      per: function (p) { return Math.PI * p[0]; } }
+  };
+
+  /* materiali */
+  var MAT_DEFS = [
+    { id: 'colla', name: 'Colla', unit: 'kg', pack: ['sacco', 'sacchi'], price: 'Prezzo (€/sacco)',
+      fields: [['cons', 'Consumo (kg/m²)'], ['pack', 'Sacco (kg)']],
+      hint: 'Dipende dalla spatola dentata e dal fondo.', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' kg'; } },
+    { id: 'fugante', name: 'Fugante', unit: 'kg', pack: ['sacco', 'sacchi'], price: 'Prezzo (€/sacco)',
+      fields: [['spess', 'Spessore piastrella (mm)'], ['dens', 'Densità (kg/L)'], ['magg', 'Maggiorazione (%)'], ['pack', 'Sacco (kg)']],
+      hint: 'Consumo calcolato da formato, spessore e larghezza della fuga.', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' kg'; } },
+    { id: 'primer', name: 'Primer', unit: 'L', pack: ['tanica', 'taniche'], price: 'Prezzo (€/tanica)',
+      fields: [['cons', 'Consumo (L/m²)'], ['pack', 'Tanica (L)']],
+      hint: '', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' L'; } },
+    { id: 'croci', name: 'Distanziatori', unit: 'pz', pack: ['confezione', 'confezioni'], price: 'Prezzo (€/conf.)',
+      fields: [['per', 'Per piastrella (pz)'], ['pack', 'Confezione (pz)']],
+      hint: '', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' pz'; } },
+    { id: 'profili', name: 'Profili e angolari', unit: 'm', pack: ['barra', 'barre'], price: 'Prezzo (€/barra)',
+      fields: [['ml', 'Metri necessari (m)'], ['pack', 'Barra (m)']],
+      hint: '', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' m'; } },
+    { id: 'battiscopa', name: 'Battiscopa', unit: 'm', pack: ['pezzo', 'pezzi'], price: 'Prezzo (€/pezzo)',
+      fields: [['porte', 'Da togliere: porte (m)'], ['pezzo', 'Lunghezza pezzo (cm)']],
+      hint: 'Perimetro delle superfici aggiunte, stimato per trapezio e triangolo.', packDesc: function (m) { return 'da ' + fmtN(num(m.pezzo)) + ' cm'; } }
+  ];
+
+  function defaultMats(sample) {
+    return {
+      colla: { cons: '5', pack: '25', price: sample ? '18' : '' },
+      fugante: { spess: '9', dens: '1,6', magg: '20', pack: '5', price: sample ? '9' : '' },
+      primer: { cons: '0,2', pack: '5', price: sample ? '22' : '' },
+      croci: { per: '2', pack: '200', price: sample ? '4' : '' },
+      profili: { ml: '0', pack: '2,5', price: sample ? '6,5' : '' },
+      battiscopa: { porte: '0', pezzo: '60', price: '' }
+    };
+  }
+
+  function defaultState(sample) {
+    return {
+      isSample: !!sample,
+      jobId: null, jobName: sample ? 'Esempio bagno e cucina' : '', client: '', address: '',
+      rooms: sample ? [
+        { id: nid(), kind: 'floor', shape: 'rett', name: 'Bagno', p0: '2,40', p1: '1,80', p2: '', p3: '', minus: false },
+        { id: nid(), kind: 'floor', shape: 'rett', name: 'Cucina', p0: '3,60', p1: '3,20', p2: '', p3: '', minus: false },
+        { id: nid(), kind: 'floor', shape: 'rett', name: 'Pilastro', p0: '0,40', p1: '0,40', p2: '', p3: '', minus: true }
+      ] : [],
+      tw: '60', th: '60', fuga: '3', mqbox: '1,44', prezzo: sample ? '24,90' : '',
+      posa: 'dritta', scarto: '5', inclWalls: false, wallH: '2,2',
+      mat: defaultMats(sample),
+      prev: {
+        posa: sample ? '28' : '', ricarico: '0', iva: '22',
+        extras: sample ? [{ id: nid(), desc: 'Demolizione vecchio pavimento', amt: '250' }] : []
+      },
+      extra: { pL: '1,2', pPct: '2', gN: '4', gW: '100', gAl: '17', gPe: '30', pzBox: '4' }
+    };
+  }
+
+  function bumpUid(s) {
+    s.rooms.forEach(function (r) { if (r.id > uid) uid = r.id; });
+    s.prev.extras.forEach(function (x) { if (x.id > uid) uid = x.id; });
+  }
+
+  function fill(d) {
+    var b = defaultState(false);
+    ['tw', 'th', 'fuga', 'mqbox', 'prezzo', 'posa', 'scarto', 'wallH', 'jobName', 'client', 'address'].forEach(function (k) {
+      if (d[k] == null) d[k] = b[k];
+    });
+    d.inclWalls = !!d.inclWalls;
+    d.mat = d.mat || {};
+    Object.keys(b.mat).forEach(function (id) { d.mat[id] = Object.assign({}, b.mat[id], d.mat[id] || {}); });
+    d.prev = Object.assign({}, b.prev, d.prev || {});
+    if (!Array.isArray(d.prev.extras)) d.prev.extras = [];
+    d.extra = Object.assign({}, b.extra, d.extra || {});
+    d.rooms = (d.rooms || []).map(function (r) {
+      return Object.assign({ kind: 'floor', shape: 'rett', name: '', p0: '', p1: '', p2: '', p3: '', minus: false }, r);
+    });
+    d.isSample = false;
+    d.jobId = d.jobId || null;
+    return d;
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && Array.isArray(d.rooms)) { var s = fill(d); bumpUid(s); return s; }
+      }
+      var raw1 = localStorage.getItem(KEY1);
+      if (raw1) {
+        var o = JSON.parse(raw1);
+        if (o && Array.isArray(o.rooms)) {
+          o.rooms = o.rooms.map(function (r) {
+            return { id: r.id, kind: 'floor', shape: 'rett', name: r.name, p0: r.l, p1: r.w, p2: '', p3: '', minus: !!r.minus };
+          });
+          var s1 = fill(o); bumpUid(s1); return s1;
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+  function save() {
+    S.isSample = false;
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  }
+
+  var S = load() || defaultState(true);
+
+  /* utilità */
+  function $(id) { return document.getElementById(id); }
+  function setT(id, t) { var e = $(id); if (e) e.textContent = t; }
+  function num(v) {
+    var n = parseFloat(String(v == null ? '' : v).replace(',', '.'));
+    return isFinite(n) && n > 0 ? n : 0;
+  }
+  function snum(v) {
+    var n = parseFloat(String(v == null ? '' : v).replace(',', '.'));
+    return isFinite(n) ? n : 0;
+  }
+  function fmt(n, d) {
+    if (!isFinite(n)) n = 0;
+    if (Math.abs(n) < 5e-10) n = 0;
+    return n.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function fmtN(n) { return n.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+  function eur(n) { return '€ ' + fmt(n, 2); }
+  function fmtInput(n) { return n.toFixed(2).replace('.', ','); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function ceilN(x) { return Math.max(0, Math.ceil(x - 1e-9)) + 0; }
+
+  function P(r) { return [num(r.p0), num(r.p1), num(r.p2), num(r.p3)]; }
+  function areaOf(r) {
+    var sh = r.kind === 'wall' ? 'rett' : (SH[r.shape] ? r.shape : 'rett');
+    return SH[sh].area(P(r));
+  }
+  function perimOf(r) {
+    var sh = SH[r.shape] ? r.shape : 'rett';
+    return SH[sh].per(P(r));
+  }
+
+  /* calcolo puro */
+  function calc(s) {
+    var fl = 0, wl = 0, per = 0;
+    s.rooms.forEach(function (r) {
+      var a = areaOf(r), sg = r.minus ? -1 : 1;
+      if (r.kind === 'wall') { wl += sg * a; }
+      else { fl += sg * a; if (!r.minus) per += perimOf(r); }
+    });
+    fl = Math.max(0, fl); wl = Math.max(0, wl);
+    var net = fl + (s.inclWalls ? wl : 0);
+    var pct = s.posa === 'custom' ? snum(s.scarto) : POSE[s.posa];
+    if (!(pct > 0)) pct = 0;
+    var lordo = net * (1 + pct / 100);
+    var f = num(s.fuga) / 10;
+    var tileArea = ((num(s.tw) + f) / 100) * ((num(s.th) + f) / 100);
+    var pezzi = tileArea > 0 ? ceilN(lordo / tileArea) : 0;
+    var box = num(s.mqbox);
+    var scatole = box > 0 ? ceilN(lordo / box) : 0;
+    var acq = box > 0 ? scatole * box : lordo;
+    var costo = acq * num(s.prezzo);
+    return { fl: fl, wl: wl, per: per, net: net, pct: pct, lordo: lordo, pezzi: pezzi, scatole: scatole, acq: acq, costo: costo, box: box };
+  }
+
+  function matCalc(id, s, c) {
+    var m = s.mat[id], need = 0, size = 0, k = 0;
+    if (id === 'colla') { need = c.net * num(m.cons); size = num(m.pack); }
+    else if (id === 'fugante') {
+      var L = num(s.tw) * 10, W = num(s.th) * 10;
+      k = (L > 0 && W > 0) ? ((L + W) / (L * W)) * num(m.spess) * num(s.fuga) * num(m.dens) * (1 + num(m.magg) / 100) : 0;
+      need = c.net * k; size = num(m.pack);
+    }
+    else if (id === 'primer') { need = c.net * num(m.cons); size = num(m.pack); }
+    else if (id === 'croci') { need = c.pezzi * num(m.per); size = num(m.pack); }
+    else if (id === 'profili') { need = num(m.ml); size = num(m.pack); }
+    else if (id === 'battiscopa') { need = Math.max(0, c.per - num(m.porte)); size = num(m.pezzo) / 100; }
+    var packs = size > 0 ? ceilN(need / size) : 0;
+    return { need: need, packs: packs, k: k, cost: packs * num(m.price) };
+  }
+
+  function prevCalc(s, c) {
+    var mats = 0;
+    MAT_DEFS.forEach(function (d) { mats += matCalc(d.id, s, c).cost; });
+    var ric = (c.costo + mats) * num(s.prev.ricarico) / 100;
+    var lab = c.net * num(s.prev.posa);
+    var ext = 0;
+    s.prev.extras.forEach(function (x) { ext += snum(x.amt); });
+    var imp = c.costo + mats + ric + lab + ext;
+    var iva = imp * num(s.prev.iva) / 100;
+    return { tile: c.costo, mats: mats, ric: ric, lab: lab, ext: ext, imp: imp, iva: iva, tot: imp + iva };
+  }
+  window.__tiles = { run: function () { var c = calc(S); return { c: c, p: prevCalc(S, c), m: MAT_DEFS.map(function (d) { return [d.id, matCalc(d.id, S, c)]; }) }; } };
+
+  /* percorsi dei campi */
+  function getPath(o, p) { return p.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
+  function setPath(o, p, v) {
+    var ks = p.split('.'), last = ks.pop();
+    var t = ks.reduce(function (a, k) { return a[k]; }, o);
+    t[last] = v;
+  }
+
+  /* righe superficie */
+  function rowHTML(r) {
+    var wall = r.kind === 'wall';
+    var sh = wall ? 'rett' : (SH[r.shape] ? r.shape : 'rett');
+    var labels = wall ? ['Lunghezza (m)', 'Altezza (m)'] : SH[sh].f;
+    var pre = r.kind + r.id;
+    var h = '<div class="room' + (r.minus ? ' minus' : '') + '" data-id="' + r.id + '">';
+    h += '<div class="span2"><label class="label" for="n' + pre + '">Nome</label>' +
+      '<input type="text" class="name" id="n' + pre + '" data-f="name" value="' + esc(r.name) + '" autocomplete="off"></div>';
+    if (!wall) {
+      h += '<div class="span2"><label class="label" for="s' + pre + '">Forma</label><select id="s' + pre + '" data-f="shape">';
+      Object.keys(SH).forEach(function (k) {
+        h += '<option value="' + k + '"' + (k === sh ? ' selected' : '') + '>' + SH[k].label + '</option>';
+      });
+      h += '</select></div>';
+    }
+    labels.forEach(function (lb, i) {
+      h += '<div><label class="label" for="p' + i + pre + '">' + lb + '</label>' +
+        '<input type="text" id="p' + i + pre + '" data-f="p' + i + '" inputmode="decimal" value="' + esc(r['p' + i] || '') + '" autocomplete="off"></div>';
+    });
+    h += '<div class="span2 foot"><div class="area"><span class="sign-pill">' + (r.minus ? '−' : '+') + '</span>' +
+      '<span data-area>' + fmt(areaOf(r), 2) + '</span> m²</div>' +
+      '<div class="row-actions"><button type="button" class="sign" data-act="sign">' + (r.minus ? 'Sottrai' : 'Aggiungi') + '</button>' +
+      '<button type="button" data-act="del" aria-label="Elimina ' + esc(r.name || 'riga') + '">Elimina</button></div></div></div>';
+    return h;
+  }
+  function renderRooms(kind) {
+    var box = $(kind === 'wall' ? 'walls' : 'floors');
+    var rows = S.rooms.filter(function (r) { return r.kind === kind; });
+    box.innerHTML = rows.map(rowHTML).join('') ||
+      '<p class="hint">' + (kind === 'wall' ? 'Nessuna parete.' : 'Nessuna superficie. Aggiungine una per iniziare.') + '</p>';
+  }
+  function findRoom(id) { return S.rooms.find(function (x) { return x.id === id; }); }
+
+  function wireRooms(kind) {
+    var box = $(kind === 'wall' ? 'walls' : 'floors');
+    box.addEventListener('input', function (e) {
+      var row = e.target.closest('.room');
+      if (!row || !e.target.dataset.f || e.target.tagName === 'SELECT') return;
+      var r = findRoom(Number(row.dataset.id));
+      if (!r) return;
+      r[e.target.dataset.f] = e.target.value;
+      var a = row.querySelector('[data-area]');
+      if (a) a.textContent = fmt(areaOf(r), 2);
+      save(); update();
+    });
+    box.addEventListener('change', function (e) {
+      var row = e.target.closest('.room');
+      if (!row || e.target.dataset.f !== 'shape') return;
+      var r = findRoom(Number(row.dataset.id));
+      if (!r) return;
+      r.shape = e.target.value;
+      save(); renderRooms(kind); update();
+    });
+    box.addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      var id = Number(btn.closest('.room').dataset.id);
+      if (btn.dataset.act === 'del') {
+        S.rooms = S.rooms.filter(function (x) { return x.id !== id; });
+      } else {
+        var r = findRoom(id);
+        if (r) r.minus = !r.minus;
+      }
+      save(); renderRooms(kind); update();
+    });
+  }
+  function addRoom(kind, minus) {
+    var n = S.rooms.filter(function (x) { return x.kind === kind && !x.minus; }).length + 1;
+    var name = minus ? (kind === 'wall' ? 'Porta o finestra' : 'Da sottrarre') : (kind === 'wall' ? 'Parete ' + n : 'Stanza ' + n);
+    S.rooms.push({ id: nid(), kind: kind, shape: 'rett', name: name, p0: '', p1: '', p2: '', p3: '', minus: minus });
+    save(); renderRooms(kind); update();
+    var box = $(kind === 'wall' ? 'walls' : 'floors');
+    var last = box.lastElementChild, inp = last && last.querySelector('[data-f="p0"]');
+    if (inp) inp.focus();
+  }
+
+  /* materiali: schede */
+  function buildMats() {
+    $('mats').innerHTML = MAT_DEFS.map(function (d) {
+      var h = '<section class="card" aria-labelledby="h-m-' + d.id + '"><div class="mat-head"><h2 id="h-m-' + d.id + '">' + d.name + '</h2>' +
+        '<span class="mat-packs" id="m-packs-' + d.id + '">–</span></div>' +
+        '<p class="mat-need" id="m-need-' + d.id + '"></p>';
+      if (d.hint) h += '<p class="hint">' + d.hint + '</p>';
+      h += '<div class="grid2">';
+      d.fields.forEach(function (f) {
+        h += '<div><label class="label" for="mi-' + d.id + '-' + f[0] + '">' + f[1] + '</label>' +
+          '<input type="text" id="mi-' + d.id + '-' + f[0] + '" data-bind="mat.' + d.id + '.' + f[0] + '" inputmode="decimal" autocomplete="off"></div>';
+      });
+      h += '<div><label class="label" for="mi-' + d.id + '-price">' + d.price + '</label>' +
+        '<input type="text" id="mi-' + d.id + '-price" data-bind="mat.' + d.id + '.price" inputmode="decimal" autocomplete="off"></div>';
+      h += '</div><p class="note" id="m-cost-' + d.id + '"></p></section>';
+      return h;
+    }).join('');
+  }
+
+  /* voci extra preventivo */
+  function renderExtras() {
+    $('extras').innerHTML = S.prev.extras.map(function (x) {
+      return '<div class="xrow" data-xid="' + x.id + '">' +
+        '<div><label class="label" for="xd' + x.id + '">Voce</label><input type="text" class="txt" id="xd' + x.id + '" data-xf="desc" value="' + esc(x.desc) + '" autocomplete="off"></div>' +
+        '<div><label class="label" for="xa' + x.id + '">Importo (€)</label><input type="text" id="xa' + x.id + '" data-xf="amt" inputmode="decimal" value="' + esc(x.amt) + '" autocomplete="off"></div>' +
+        '<button type="button" data-xdel aria-label="Elimina voce">×</button></div>';
+    }).join('') || '<p class="hint">Nessuna voce aggiunta.</p>';
+  }
+  $('extras').addEventListener('input', function (e) {
+    var row = e.target.closest('.xrow');
+    if (!row || !e.target.dataset.xf) return;
+    var x = S.prev.extras.find(function (y) { return y.id === Number(row.dataset.xid); });
+    if (!x) return;
+    x[e.target.dataset.xf] = e.target.value;
+    save(); update();
+  });
+  $('extras').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-xdel]');
+    if (!b) return;
+    var id = Number(b.closest('.xrow').dataset.xid);
+    S.prev.extras = S.prev.extras.filter(function (y) { return y.id !== id; });
+    save(); renderExtras(); update();
+  });
+  $('add-extra').addEventListener('click', function () {
+    S.prev.extras.push({ id: nid(), desc: '', amt: '' });
+    save(); renderExtras(); update();
+    var last = $('extras').lastElementChild, inp = last && last.querySelector('[data-xf="desc"]');
+    if (inp) inp.focus();
+  });
+
+  /* lavori salvati */
+  function readJobs() {
+    try { var l = JSON.parse(localStorage.getItem(JOBS) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+  }
+  function writeJobs(l) {
+    try { localStorage.setItem(JOBS, JSON.stringify(l)); return true; } catch (e) { return false; }
+  }
+  function renderJobs() {
+    var list = readJobs();
+    $('jobs').innerHTML = list.map(function (j) {
+      var st = fill(JSON.parse(JSON.stringify(j.state)));
+      var c = calc(st), p = prevCalc(st, c);
+      var d = new Date(j.saved);
+      var when = isNaN(d.getTime()) ? '' : d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+      return '<div class="job' + (j.id === S.jobId ? ' current' : '') + '" data-jid="' + esc(j.id) + '">' +
+        '<div class="job-title">' + esc(j.name) + '</div>' +
+        '<div class="job-meta">' + (j.client ? esc(j.client) + ' · ' : '') + fmt(c.net, 2) + ' m² · ' + (p.tot > 0 ? eur(p.tot) + ' · ' : '') + when + '</div>' +
+        '<div class="row-actions"><button type="button" data-jact="open">Apri</button>' +
+        '<button type="button" data-jact="del">Elimina</button></div></div>';
+    }).join('') || '<p class="hint">Nessun lavoro salvato.</p>';
+  }
+  function saveJob() {
+    var list = readJobs();
+    if (!S.jobId) S.jobId = Date.now().toString(36) + nid();
+    var copy = JSON.parse(JSON.stringify(S));
+    copy.isSample = false;
+    var entry = { id: S.jobId, name: S.jobName || S.client || 'Lavoro senza nome', client: S.client, saved: new Date().toISOString(), state: copy };
+    var i = list.findIndex(function (j) { return j.id === S.jobId; });
+    if (i >= 0) list[i] = entry; else list.unshift(entry);
+    save();
+    if (writeJobs(list)) toast('Lavoro salvato'); else toast('Salvataggio non riuscito');
+    renderJobs();
+  }
+  $('save-job').addEventListener('click', saveJob);
+  $('new-job').addEventListener('click', function () {
+    var b = defaultState(false);
+    b.tw = S.tw; b.th = S.th; b.fuga = S.fuga; b.mqbox = S.mqbox; b.prezzo = S.prezzo;
+    b.posa = S.posa; b.scarto = S.scarto; b.wallH = S.wallH;
+    b.mat = JSON.parse(JSON.stringify(S.mat));
+    b.prev.posa = S.prev.posa; b.prev.ricarico = S.prev.ricarico; b.prev.iva = S.prev.iva;
+    b.extra = JSON.parse(JSON.stringify(S.extra));
+    b.rooms = [{ id: nid(), kind: 'floor', shape: 'rett', name: 'Stanza 1', p0: '', p1: '', p2: '', p3: '', minus: false }];
+    S = b; save(); renderAll(); setTab('calc'); toast('Nuovo lavoro');
+  });
+  var armTimer = null;
+  $('jobs').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-jact]');
+    if (!btn) return;
+    var id = btn.closest('.job').dataset.jid;
+    var list = readJobs();
+    var j = list.find(function (x) { return x.id === id; });
+    if (!j) return;
+    if (btn.dataset.jact === 'open') {
+      S = fill(JSON.parse(JSON.stringify(j.state)));
+      S.jobId = j.id; bumpUid(S); save(); renderAll(); setTab('calc'); toast('Lavoro aperto');
+    } else if (btn.dataset.armed === '1') {
+      list = list.filter(function (x) { return x.id !== id; });
+      writeJobs(list);
+      if (S.jobId === id) { S.jobId = null; save(); }
+      renderJobs(); toast('Lavoro eliminato');
+    } else {
+      btn.dataset.armed = '1'; btn.classList.add('armed'); btn.textContent = 'Conferma';
+      clearTimeout(armTimer);
+      armTimer = setTimeout(function () { btn.dataset.armed = ''; btn.classList.remove('armed'); btn.textContent = 'Elimina'; }, 3000);
+    }
+  });
+
+  /* campi collegati */
+  function setInputs() {
+    var els = document.querySelectorAll('[data-bind]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i], v = getPath(S, el.dataset.bind);
+      if (el.type === 'checkbox') el.checked = !!v; else el.value = v == null ? '' : v;
+    }
+    var sc = $('scarto');
+    sc.readOnly = S.posa !== 'custom';
+    sc.style.opacity = S.posa !== 'custom' ? '0.7' : '1';
+  }
+  document.addEventListener('input', function (e) {
+    var el = e.target;
+    if (!el.dataset || !el.dataset.bind) return;
+    setPath(S, el.dataset.bind, el.type === 'checkbox' ? el.checked : el.value);
+    if (el.dataset.bind === 'posa') {
+      if (S.posa !== 'custom') S.scarto = String(POSE[S.posa]);
+      setInputs();
+    }
+    save(); update();
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (el && el.type === 'checkbox' && el.dataset.bind) {
+      setPath(S, el.dataset.bind, el.checked); save(); update();
+    }
+  });
+
+  /* testi da copiare */
+  function calcText() {
+    var c = calc(S), L = ['Calcolo piastrelle' + (S.jobName ? ' - ' + S.jobName : '')];
+    S.rooms.forEach(function (r) {
+      L.push((r.minus ? '− ' : '+ ') + (r.name || 'Superficie') + (r.kind === 'wall' ? ' (parete)' : '') + ': ' + fmt(areaOf(r), 2) + ' m²');
+    });
+    L.push('Netto: ' + fmt(c.net, 2) + ' m²');
+    L.push('Scarto ' + fmt(c.pct, 1) + '%: ' + fmt(c.lordo, 2) + ' m²');
+    L.push('Piastrella ' + fmtN(num(S.tw)) + '×' + fmtN(num(S.th)) + ' cm, fuga ' + fmtN(num(S.fuga)) + ' mm');
+    L.push('Piastrelle: ' + fmt(c.pezzi, 0));
+    if (c.box > 0) L.push('Scatole: ' + fmt(c.scatole, 0) + ' (' + fmt(c.acq, 2) + ' m²)');
+    if (num(S.prezzo) > 0) L.push('Costo piastrelle: ' + eur(c.costo));
+    return L.join('\n');
+  }
+  function matText() {
+    var c = calc(S), L = ['Lista materiali' + (S.jobName ? ' - ' + S.jobName : '')];
+    if (c.box > 0) L.push('Piastrelle: ' + c.scatole + (c.scatole === 1 ? ' scatola' : ' scatole') + ' (' + fmt(c.acq, 2) + ' m²)');
+    else L.push('Piastrelle: ' + fmt(c.lordo, 2) + ' m²');
+    MAT_DEFS.forEach(function (d) {
+      var m = matCalc(d.id, S, c);
+      if (m.need > 0 && m.packs > 0) {
+        L.push(d.name + ': ' + m.packs + ' ' + d.pack[m.packs === 1 ? 0 : 1] + ' ' + d.packDesc(S.mat[d.id]) + ' (fabbisogno ' + fmt(m.need, 1) + ' ' + d.unit + ')');
+      }
+    });
+    return L.join('\n');
+  }
+  function prevText() {
+    var c = calc(S), p = prevCalc(S, c);
+    var L = ['Preventivo' + (S.jobName ? ' - ' + S.jobName : '')];
+    if (S.client) L.push('Cliente: ' + S.client);
+    if (S.address) L.push('Cantiere: ' + S.address);
+    L.push('Superficie: ' + fmt(c.net, 2) + ' m²');
+    L.push('Piastrelle: ' + eur(p.tile));
+    L.push('Materiali di posa: ' + eur(p.mats));
+    if (p.ric !== 0) L.push('Ricarico materiali: ' + eur(p.ric));
+    L.push('Manodopera: ' + eur(p.lab));
+    S.prev.extras.forEach(function (x) { if (snum(x.amt) !== 0) L.push((x.desc || 'Altra voce') + ': ' + eur(snum(x.amt))); });
+    L.push('Imponibile: ' + eur(p.imp));
+    L.push('IVA ' + fmtN(num(S.prev.iva)) + '%: ' + eur(p.iva));
+    L.push('Totale: ' + eur(p.tot));
+    return L.join('\n');
+  }
+  var tt;
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(tt);
+    tt = setTimeout(function () { t.hidden = true; }, 2200);
+  }
+  function copyText(text) {
+    var done = function () { toast('Copiato'); };
+    var fallback = function () {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { toast('Copia non riuscita'); }
+      document.body.removeChild(ta);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  }
+  $('copy-calc').addEventListener('click', function () { copyText(calcText()); });
+  $('copy-mat').addEventListener('click', function () { copyText(matText()); });
+  $('copy-prev').addEventListener('click', function () { copyText(prevText()); });
+
+  /* schede */
+  function setTab(name) {
+    var ps = document.querySelectorAll('[data-panel]');
+    for (var i = 0; i < ps.length; i++) ps[i].hidden = ps[i].dataset.panel !== name;
+    var bs = document.querySelectorAll('[data-tab]');
+    for (var j = 0; j < bs.length; j++) bs[j].setAttribute('aria-selected', bs[j].dataset.tab === name ? 'true' : 'false');
+    if (name === 'jobs') renderJobs();
+    window.scrollTo(0, 0);
+  }
+  document.querySelector('.tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tab]');
+    if (b) setTab(b.dataset.tab);
+  });
+  $('b-go').addEventListener('click', function () { setTab('prev'); });
+
+  /* pulsanti superfici */
+  $('add-floor').addEventListener('click', function () { addRoom('floor', false); });
+  $('add-floor-minus').addEventListener('click', function () { addRoom('floor', true); });
+  $('add-wall').addEventListener('click', function () { addRoom('wall', false); });
+  $('add-wall-minus').addEventListener('click', function () { addRoom('wall', true); });
+  $('wall-perim').addEventListener('click', function () {
+    var c = calc(S);
+    if (!(c.per > 0)) { toast('Inserisci prima le stanze'); return; }
+    S.rooms.push({ id: nid(), kind: 'wall', shape: 'rett', name: 'Pareti (perimetro)', p0: fmtInput(c.per), p1: S.wallH, p2: '', p3: '', minus: false });
+    S.inclWalls = true;
+    save(); setInputs(); renderRooms('wall'); update();
+    toast('Aggiunta parete lunga come il perimetro');
+  });
+
+  /* aggiornamento */
+  function update() {
+    var c = calc(S), p = prevCalc(S, c);
+    setT('r-floor', fmt(c.fl, 2) + ' m²');
+    setT('r-wall', S.inclWalls ? fmt(c.wl, 2) + ' m²' : 'non incluse');
+    setT('r-net', fmt(c.net, 2) + ' m²');
+    setT('r-pct', fmt(c.pct, 1) + ' %');
+    setT('r-lordo', fmt(c.lordo, 2) + ' m²');
+    setT('r-pezzi', c.pezzi ? fmt(c.pezzi, 0) + ' pz' : '–');
+    setT('r-box', c.box > 0 ? fmt(c.scatole, 0) : 'inserisci mq/scatola');
+    setT('r-acq', fmt(c.acq, 2) + ' m²');
+    setT('r-extra', fmt(Math.max(0, c.acq - c.net), 2) + ' m²');
+    setT('r-costo', num(S.prezzo) > 0 ? eur(c.costo) : '–');
+    setT('r-note', c.box > 0
+      ? 'Le scatole sono arrotondate per eccesso. Il costo è calcolato sui mq acquistati.'
+      : 'Senza i mq per scatola il costo si calcola sui mq con scarto.');
+
+    MAT_DEFS.forEach(function (d) {
+      var m = matCalc(d.id, S, c);
+      setT('m-packs-' + d.id, m.packs > 0 ? m.packs + ' ' + d.pack[m.packs === 1 ? 0 : 1] : '–');
+      var need = 'Fabbisogno: ' + fmt(m.need, 1) + ' ' + d.unit;
+      if (d.id === 'fugante') need += ' · consumo calcolato ' + fmt(m.k, 3) + ' kg/m²';
+      setT('m-need-' + d.id, need);
+      setT('m-cost-' + d.id, num(S.mat[d.id].price) > 0 && m.packs > 0 ? 'Costo: ' + eur(m.cost) : 'Inserisci il prezzo per avere il costo.');
+    });
+    setT('m-tot', eur(p.mats));
+    setT('m-tile', eur(p.tile));
+    setT('m-all', eur(p.mats + p.tile));
+
+    setT('p-tile', eur(p.tile));
+    setT('p-mat', eur(p.mats));
+    setT('p-ric', eur(p.ric));
+    setT('p-lab', eur(p.lab));
+    setT('p-ext', eur(p.ext));
+    setT('p-imp', eur(p.imp));
+    setT('p-iva', eur(p.iva));
+    setT('p-tot', eur(p.tot));
+
+    var x = S.extra;
+    setT('x-pend', fmt(num(x.pL) * num(x.pPct), 1) + ' cm');
+    var g = num(x.gN) * (num(x.gAl) + num(x.gPe)) * num(x.gW) / 10000;
+    setT('x-grad', fmt(g, 2) + ' m²');
+    setT('x-grad-s', fmt(g * (1 + c.pct / 100), 2) + ' m²');
+    setT('x-grad-ml', fmt(num(x.gN) * num(x.gW) / 100, 2) + ' m');
+    setT('x-pz', fmt(num(x.pzBox) * num(S.tw) * num(S.th) / 10000, 2) + ' m²');
+
+    setT('b-box', c.box > 0 ? fmt(c.scatole, 0) + (c.scatole === 1 ? ' scatola' : ' scatole') : fmt(c.lordo, 2) + ' m²');
+    setT('b-sub', fmt(c.net, 2) + ' m² netti, scarto ' + fmt(c.pct, 0) + '%' + (p.tot > 0 ? ' · totale ' + eur(p.tot) : ''));
+    $('sample').hidden = !S.isSample;
+  }
+
+  function renderAll() {
+    setInputs(); renderRooms('floor'); renderRooms('wall'); renderExtras(); renderJobs(); update();
+  }
+
+  wireRooms('floor');
+  wireRooms('wall');
+  buildMats();
+  renderAll();
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
