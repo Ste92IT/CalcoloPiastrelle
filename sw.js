@@ -1,5 +1,5 @@
 // Service worker: pagina sempre aggiornata quando c'è internet, disponibile offline quando manca.
-var CACHE = 'calcolo-piastrelle-v3';
+var CACHE = 'calcolo-piastrelle-v4';
 var FILES = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {

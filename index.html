@@ -74,7 +74,7 @@ body {
   padding-block: 0 120px;
 }
 .wrap { max-width: 640px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; padding-top: 14px; }
-.panel { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel, .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 
 /* testata con fughe */
 .top {
@@ -105,18 +105,18 @@ h1 {
   top: env(safe-area-inset-top, 0px);
   z-index: 5;
   margin-inline: -16px;
-  padding: 8px 16px;
+  padding: 8px 8px;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
 }
-.tabs-in { display: flex; gap: 6px; width: max-content; margin-inline: auto; }
+.tabs-in { display: flex; gap: 3px; width: max-content; margin-inline: auto; }
 .tabs button {
   flex: 0 0 auto;
   min-height: 42px;
   border-radius: 999px;
-  padding: 6px 16px;
-  font-size: 0.92rem;
+  padding: 6px 9px;
+  font-size: 0.82rem;
   font-weight: 500;
   background: var(--surface);
 }
@@ -141,6 +141,12 @@ h2 {
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 1.15rem;
+  margin: 0;
+}
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
   margin: 0;
 }
 .hint { margin: 0; color: var(--muted); font-size: 0.85rem; }
@@ -260,6 +266,7 @@ dl.results dd.strong { color: var(--accent); }
 dl.results dt.total { color: var(--fg); font-weight: 700; font-size: 1.1rem; border-bottom: 0; }
 dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem; border-bottom: 0; }
 .note { font-size: 0.82rem; color: var(--muted); margin: 0; }
+.tblock { display: flex; flex-direction: column; gap: 2px; }
 
 /* materiali */
 .mat-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
@@ -284,7 +291,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
 .job .row-actions button { flex: 1; }
 .job.current { border-color: var(--accent); }
 
-/* materiali personalizzati */
+/* materiali personalizzati e piastrelle */
 .cx {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -295,6 +302,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   align-items: end;
 }
 .cx > div { min-width: 0; }
+.cx.tile { border-left: 4px solid var(--accent); }
 
 /* barra fissa */
 .bar {
@@ -350,7 +358,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   <section class="card" aria-labelledby="h-floor">
     <div>
       <h2 id="h-floor">Pavimento</h2>
-      <p class="hint">Misure in metri. Scegli la forma e usa "Sottrai" per pilastri e rientranze.</p>
+      <p class="hint">Misure in metri. Scegli la forma e usa "Sottrai" per pilastri e rientranze. Un'area da sottrarre va assegnata alla stessa piastrella della stanza.</p>
     </div>
     <div id="sample" class="sample" hidden>Misure e prezzi di esempio: sostituiscili con quelli del cantiere.</div>
     <div class="rooms" id="floors"></div>
@@ -365,7 +373,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       <h2 id="h-wall">Pareti</h2>
       <p class="hint">Per rivestimenti in bagno e cucina. Inserisci anche porte e finestre come aree da sottrarre.</p>
     </div>
-    <label class="check"><input type="checkbox" id="inclWalls" data-bind="inclWalls"> Includi le pareti nel calcolo (stessa piastrella del pavimento)</label>
+    <label class="check"><input type="checkbox" id="inclWalls" data-bind="inclWalls"> Includi le pareti nel calcolo</label>
     <div class="grid2">
       <div>
         <label class="label" for="wallH">Altezza rivestimento (m)</label>
@@ -381,55 +389,18 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   </section>
 
   <section class="card" aria-labelledby="h-tile">
-    <h2 id="h-tile">Piastrella</h2>
-    <div class="grid2">
-      <div>
-        <label class="label" for="tw">Larghezza (cm)</label>
-        <input type="text" id="tw" data-bind="tw" inputmode="decimal" autocomplete="off">
-      </div>
-      <div>
-        <label class="label" for="th">Altezza (cm)</label>
-        <input type="text" id="th" data-bind="th" inputmode="decimal" autocomplete="off">
-      </div>
-      <div>
-        <label class="label" for="fuga">Fuga (mm)</label>
-        <input type="text" id="fuga" data-bind="fuga" inputmode="decimal" autocomplete="off">
-      </div>
-      <div>
-        <label class="label" for="mqbox">Mq per scatola</label>
-        <input type="text" id="mqbox" data-bind="mqbox" inputmode="decimal" autocomplete="off">
-      </div>
-      <div>
-        <label class="label" for="prezzo">Prezzo (€/mq)</label>
-        <input type="text" id="prezzo" data-bind="prezzo" inputmode="decimal" autocomplete="off">
-      </div>
-    </div>
-  </section>
-
-  <section class="card" aria-labelledby="h-posa">
     <div>
-      <h2 id="h-posa">Posa e scarto</h2>
-      <p class="hint">Lo scarto cambia con il tipo di posa. Puoi scegliere un valore tuo.</p>
+      <h2 id="h-tile">Piastrelle</h2>
+      <p class="hint">Se la casa ha piastrelle diverse, aggiungine una per tipo e scegli quale usare in ogni superficie. Ognuna ha la sua posa e il suo scarto.</p>
     </div>
-    <div class="grid2">
-      <div>
-        <label class="label" for="posa">Tipo di posa</label>
-        <select id="posa" data-bind="posa">
-          <option value="dritta">Dritta (5%)</option>
-          <option value="diagonale">Diagonale (10%)</option>
-          <option value="spina">Spina di pesce (15%)</option>
-          <option value="custom">Personalizzato</option>
-        </select>
-      </div>
-      <div>
-        <label class="label" for="scarto">Scarto (%)</label>
-        <input type="text" id="scarto" data-bind="scarto" inputmode="decimal" autocomplete="off">
-      </div>
-    </div>
+    <div class="list" id="tiles"></div>
+    <button type="button" class="primary" id="add-tile">+ Aggiungi piastrella</button>
   </section>
 
   <section class="card" aria-labelledby="h-ris">
     <h2 id="h-ris">Riepilogo piastrelle</h2>
+    <div class="stack" id="r-per"></div>
+    <h3 id="r-tot-h" hidden>Totale</h3>
     <dl class="results">
       <dt>Pavimento netto</dt><dd id="r-floor">–</dd>
       <dt>Pareti nette</dt><dd id="r-wall">–</dd>
@@ -456,6 +427,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     </div>
   </section>
   <div class="panel" id="mats"></div>
+
   <section class="card" aria-labelledby="h-cx">
     <div>
       <h2 id="h-cx">Materiali personalizzati</h2>
@@ -616,7 +588,11 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   <section class="card" aria-labelledby="h-grad">
     <div>
       <h2 id="h-grad">Gradini</h2>
-      <p class="hint">Piastrelle di alzata e pedata. Lo scarto segue la posa scelta.</p>
+      <p class="hint">Piastrelle di alzata e pedata. Lo scarto è quello della piastrella scelta.</p>
+    </div>
+    <div>
+      <label class="label" for="gTile">Piastrella</label>
+      <select id="gTile" data-tilesel="gTile"></select>
     </div>
     <div class="grid2">
       <div>
@@ -646,7 +622,11 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   <section class="card" aria-labelledby="h-pz">
     <div>
       <h2 id="h-pz">Da pezzi a mq per scatola</h2>
-      <p class="hint">Se sulla scatola trovi solo il numero di pezzi. Usa le misure della piastrella inserite in Calcolo.</p>
+      <p class="hint">Se sulla scatola trovi solo il numero di pezzi. Usa le misure della piastrella scelta.</p>
+    </div>
+    <div>
+      <label class="label" for="pzTile">Piastrella</label>
+      <select id="pzTile" data-tilesel="pzTile"></select>
     </div>
     <div>
       <label class="label" for="pzBox">Pezzi per scatola</label>
@@ -676,6 +656,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   var JOBS = 'calcolo-piastrelle-lavori-v1';
   var POSE = { dritta: 5, diagonale: 10, spina: 15 };
   var DEFAULT_NOTE = 'Quantità e consumi indicativi: verificare con le schede tecniche dei prodotti.';
+  var LEGACY_TILE_KEYS = ['tw', 'th', 'fuga', 'mqbox', 'prezzo', 'posa', 'scarto'];
   var uid = 0;
   function nid() { return ++uid; }
 
@@ -704,8 +685,8 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       fields: [['cons', 'Consumo (kg/m²)'], ['pack', 'Sacco (kg)']],
       hint: 'Dipende dalla spatola dentata e dal fondo.', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' kg'; } },
     { id: 'fugante', name: 'Fugante', unit: 'kg', pack: ['sacco', 'sacchi'], price: 'Prezzo (€/sacco)',
-      fields: [['spess', 'Spessore piastrella (mm)'], ['dens', 'Densità (kg/L)'], ['magg', 'Maggiorazione (%)'], ['pack', 'Sacco (kg)']],
-      hint: 'Consumo calcolato da formato, spessore e larghezza della fuga.', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' kg'; } },
+      fields: [['dens', 'Densità (kg/L)'], ['magg', 'Maggiorazione (%)'], ['pack', 'Sacco (kg)']],
+      hint: 'Consumo calcolato da formato, spessore e fuga di ogni piastrella.', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' kg'; } },
     { id: 'primer', name: 'Primer', unit: 'L', pack: ['tanica', 'taniche'], price: 'Prezzo (€/tanica)',
       fields: [['cons', 'Consumo (L/m²)'], ['pack', 'Tanica (L)']],
       hint: '', packDesc: function (m) { return 'da ' + fmtN(num(m.pack)) + ' L'; } },
@@ -723,7 +704,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   function defaultMats(sample) {
     return {
       colla: { cons: '5', pack: '25', price: sample ? '18' : '' },
-      fugante: { spess: '9', dens: '1,6', magg: '20', pack: '5', price: sample ? '9' : '' },
+      fugante: { dens: '1,6', magg: '20', pack: '5', price: sample ? '9' : '' },
       primer: { cons: '0,2', pack: '5', price: sample ? '22' : '' },
       croci: { per: '2', pack: '200', price: sample ? '4' : '' },
       profili: { ml: '0', pack: '2,5', price: sample ? '6,5' : '' },
@@ -731,17 +712,39 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     };
   }
 
+  /* piastrelle */
+  function newTile(o) {
+    return Object.assign({ id: nid(), name: '', tw: '60', th: '60', fuga: '3', spess: '9', mqbox: '1,44', prezzo: '', posa: 'dritta', scarto: '5' }, o || {});
+  }
+  function tileOf(s, id) {
+    var n = Number(id);
+    for (var i = 0; i < s.tiles.length; i++) if (s.tiles[i].id === n) return s.tiles[i];
+    return s.tiles[0];
+  }
+  function tileName(s, t) {
+    if (t.name) return t.name;
+    return 'Piastrella ' + (s.tiles.indexOf(t) + 1);
+  }
+  function pctOf(t) {
+    var p = t.posa === 'custom' ? snum(t.scarto) : POSE[t.posa];
+    return p > 0 ? p : 0;
+  }
+
   function defaultState(sample) {
+    var tA = newTile(sample ? { name: 'Gres bagno', tw: '30', th: '60', mqbox: '1,08', prezzo: '29,50' } : {});
+    var tiles = [tA];
+    if (sample) tiles.push(newTile({ name: 'Gres cucina', mqbox: '1,44', prezzo: '24,90', posa: 'diagonale', scarto: '10' }));
+    var tB = tiles[tiles.length - 1];
     return {
       isSample: !!sample,
       jobId: null, jobName: sample ? 'Esempio bagno e cucina' : '', client: '', address: '',
+      tiles: tiles,
       rooms: sample ? [
-        { id: nid(), kind: 'floor', shape: 'rett', name: 'Bagno', p0: '2,40', p1: '1,80', p2: '', p3: '', minus: false },
-        { id: nid(), kind: 'floor', shape: 'rett', name: 'Cucina', p0: '3,60', p1: '3,20', p2: '', p3: '', minus: false },
-        { id: nid(), kind: 'floor', shape: 'rett', name: 'Pilastro', p0: '0,40', p1: '0,40', p2: '', p3: '', minus: true }
+        { id: nid(), kind: 'floor', shape: 'rett', name: 'Bagno', p0: '2,40', p1: '1,80', p2: '', p3: '', minus: false, tile: tA.id },
+        { id: nid(), kind: 'floor', shape: 'rett', name: 'Cucina', p0: '3,60', p1: '3,20', p2: '', p3: '', minus: false, tile: tB.id },
+        { id: nid(), kind: 'floor', shape: 'rett', name: 'Pilastro', p0: '0,40', p1: '0,40', p2: '', p3: '', minus: true, tile: tB.id }
       ] : [],
-      tw: '60', th: '60', fuga: '3', mqbox: '1,44', prezzo: sample ? '24,90' : '',
-      posa: 'dritta', scarto: '5', inclWalls: false, wallH: '2,2',
+      inclWalls: false, wallH: '2,2',
       mat: defaultMats(sample),
       custom: sample ? [{ id: nid(), name: 'Silicone sanitario', mode: 'fissa', val: '2', unit: 'pz', pack: '', price: '7' }] : [],
       prev: {
@@ -749,24 +752,39 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
         posa: sample ? '28' : '', ricarico: '0', iva: '22',
         extras: sample ? [{ id: nid(), desc: 'Demolizione vecchio pavimento', amt: '250' }] : []
       },
-      extra: { pL: '1,2', pPct: '2', gN: '4', gW: '100', gAl: '17', gPe: '30', pzBox: '4' }
+      extra: { pL: '1,2', pPct: '2', gN: '4', gW: '100', gAl: '17', gPe: '30', pzBox: '4', gTile: '', pzTile: '' }
     };
   }
 
   function bumpUid(s) {
-    s.rooms.forEach(function (r) { if (r.id > uid) uid = r.id; });
-    s.prev.extras.forEach(function (x) { if (x.id > uid) uid = x.id; });
-    (s.custom || []).forEach(function (x) { if (x.id > uid) uid = x.id; });
+    [s.rooms, s.tiles, s.custom, s.prev && s.prev.extras].forEach(function (a) {
+      (Array.isArray(a) ? a : []).forEach(function (r) { if (r && typeof r.id === 'number' && r.id > uid) uid = r.id; });
+    });
   }
 
+  /* normalizza uno stato, anche se salvato da una versione precedente con una sola piastrella */
   function fill(d) {
+    bumpUid(d);
     var b = defaultState(false);
-    ['tw', 'th', 'fuga', 'mqbox', 'prezzo', 'posa', 'scarto', 'wallH', 'jobName', 'client', 'address'].forEach(function (k) {
-      if (d[k] == null) d[k] = b[k];
-    });
+    ['wallH', 'jobName', 'client', 'address'].forEach(function (k) { if (d[k] == null) d[k] = b[k]; });
     d.inclWalls = !!d.inclWalls;
+    if (!Array.isArray(d.tiles) || !d.tiles.length) {
+      var lg = {};
+      LEGACY_TILE_KEYS.forEach(function (k) { if (d[k] != null) lg[k] = String(d[k]); });
+      if (d.mat && d.mat.fugante && d.mat.fugante.spess != null) lg.spess = String(d.mat.fugante.spess);
+      d.tiles = [newTile(lg)];
+    }
+    LEGACY_TILE_KEYS.forEach(function (k) { delete d[k]; });
+    var seen = {};
+    d.tiles = d.tiles.map(function (t) {
+      t = Object.assign(newTile(), t && typeof t === 'object' ? t : {});
+      if (typeof t.id !== 'number' || seen[t.id]) t.id = nid();
+      seen[t.id] = 1;
+      return t;
+    });
     d.mat = d.mat || {};
     Object.keys(b.mat).forEach(function (id) { d.mat[id] = Object.assign({}, b.mat[id], d.mat[id] || {}); });
+    if (d.mat.fugante) delete d.mat.fugante.spess;
     d.prev = Object.assign({}, b.prev, d.prev || {});
     if (!Array.isArray(d.prev.extras)) d.prev.extras = [];
     d.extra = Object.assign({}, b.extra, d.extra || {});
@@ -774,7 +792,9 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       return Object.assign({ id: nid(), name: '', mode: 'fissa', val: '', unit: '', pack: '', price: '' }, x);
     }) : [];
     d.rooms = (d.rooms || []).map(function (r) {
-      return Object.assign({ kind: 'floor', shape: 'rett', name: '', p0: '', p1: '', p2: '', p3: '', minus: false }, r);
+      r = Object.assign({ kind: 'floor', shape: 'rett', name: '', p0: '', p1: '', p2: '', p3: '', minus: false }, r);
+      if (!seen[r.tile]) r.tile = d.tiles[0].id;
+      return r;
     });
     d.isSample = false;
     d.jobId = d.jobId || null;
@@ -840,36 +860,55 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     return SH[sh].per(P(r));
   }
 
-  /* calcolo puro */
+  /* calcolo puro: una voce per ogni piastrella */
   function calc(s) {
-    var fl = 0, wl = 0, per = 0;
+    var by = s.tiles.map(function (t) { return { t: t, fl: 0, wl: 0, n: 0 }; });
+    var per = 0;
     s.rooms.forEach(function (r) {
-      var a = areaOf(r), sg = r.minus ? -1 : 1;
-      if (r.kind === 'wall') { wl += sg * a; }
-      else { fl += sg * a; if (!r.minus) per += perimOf(r); }
+      var a = areaOf(r), sg = r.minus ? -1 : 1, x = by[0];
+      for (var i = 0; i < by.length; i++) if (by[i].t.id === r.tile) { x = by[i]; break; }
+      x.n++;
+      if (r.kind === 'wall') x.wl += sg * a; else x.fl += sg * a;
+      if (r.kind !== 'wall' && !r.minus) per += perimOf(r);
     });
-    fl = Math.max(0, fl); wl = Math.max(0, wl);
-    var net = fl + (s.inclWalls ? wl : 0);
-    var pct = s.posa === 'custom' ? snum(s.scarto) : POSE[s.posa];
-    if (!(pct > 0)) pct = 0;
-    var lordo = net * (1 + pct / 100);
-    var f = num(s.fuga) / 10;
-    var tileArea = ((num(s.tw) + f) / 100) * ((num(s.th) + f) / 100);
-    var pezzi = tileArea > 0 ? ceilN(lordo / tileArea) : 0;
-    var box = num(s.mqbox);
-    var scatole = box > 0 ? ceilN(lordo / box) : 0;
-    var acq = box > 0 ? scatole * box : lordo;
-    var costo = acq * num(s.prezzo);
-    return { fl: fl, wl: wl, per: per, net: net, pct: pct, lordo: lordo, pezzi: pezzi, scatole: scatole, acq: acq, costo: costo, box: box };
+    var T = { fl: 0, wl: 0, per: per, net: 0, lordo: 0, pezzi: 0, scatole: 0, acq: 0, costo: 0, hasBox: false, pct: null, byTile: by, used: [] };
+    by.forEach(function (x) {
+      var t = x.t;
+      x.fl = Math.max(0, x.fl); x.wl = Math.max(0, x.wl);
+      x.net = x.fl + (s.inclWalls ? x.wl : 0);
+      x.pct = pctOf(t);
+      x.lordo = x.net * (1 + x.pct / 100);
+      var f = num(t.fuga) / 10;
+      var ta = ((num(t.tw) + f) / 100) * ((num(t.th) + f) / 100);
+      x.pezzi = ta > 0 ? ceilN(x.lordo / ta) : 0;
+      x.box = num(t.mqbox);
+      x.scatole = x.box > 0 ? ceilN(x.lordo / x.box) : 0;
+      x.acq = x.box > 0 ? x.scatole * x.box : x.lordo;
+      x.costo = x.acq * num(t.prezzo);
+      x.name = tileName(s, t);
+      T.fl += x.fl; T.wl += x.wl; T.net += x.net; T.lordo += x.lordo;
+      T.pezzi += x.pezzi; T.scatole += x.scatole; T.acq += x.acq; T.costo += x.costo;
+    });
+    T.used = by.filter(function (x) { return x.n > 0; });
+    if (!T.used.length) T.used = [by[0]];
+    T.hasBox = T.used.some(function (x) { return x.box > 0; });
+    var p0 = T.used[0].pct;
+    T.pct = T.used.every(function (x) { return x.pct === p0; }) ? p0 : null;
+    return T;
+  }
+
+  function fugK(t, m) {
+    var L = num(t.tw) * 10, W = num(t.th) * 10;
+    return (L > 0 && W > 0) ? ((L + W) / (L * W)) * num(t.spess) * num(t.fuga) * num(m.dens) * (1 + num(m.magg) / 100) : 0;
   }
 
   function matCalc(id, s, c) {
     var m = s.mat[id], need = 0, size = 0, k = 0;
     if (id === 'colla') { need = c.net * num(m.cons); size = num(m.pack); }
     else if (id === 'fugante') {
-      var L = num(s.tw) * 10, W = num(s.th) * 10;
-      k = (L > 0 && W > 0) ? ((L + W) / (L * W)) * num(m.spess) * num(s.fuga) * num(m.dens) * (1 + num(m.magg) / 100) : 0;
-      need = c.net * k; size = num(m.pack);
+      c.byTile.forEach(function (x) { need += x.net * fugK(x.t, m); });
+      k = c.net > 0 ? need / c.net : fugK(s.tiles[0], m);
+      size = num(m.pack);
     }
     else if (id === 'primer') { need = c.net * num(m.cons); size = num(m.pack); }
     else if (id === 'croci') { need = c.pezzi * num(m.per); size = num(m.pack); }
@@ -903,7 +942,14 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     var iva = imp * num(s.prev.iva) / 100;
     return { tile: c.costo, mats: mats, ric: ric, lab: lab, ext: ext, imp: imp, iva: iva, tot: imp + iva };
   }
-  window.__tiles = { state: function () { return S; }, exportCurrent: function () { saveJob(); return exportJobs([jobEntry()], 'test'); }, importText: importText, cleanState: cleanState, customCalc: customCalc, tables: function () { return [HW.length, HB.length]; }, pdf: function () { return makePdf(); }, model: function () { return docModel(); }, run: function () { var c = calc(S); return { c: c, p: prevCalc(S, c), m: MAT_DEFS.map(function (d) { return [d.id, matCalc(d.id, S, c)]; }) }; } };
+  window.__tiles = {
+    state: function () { return S; }, tables: function () { return [HW.length, HB.length]; },
+    exportCurrent: function () { saveJob(); return exportJobs([jobEntry()], 'test'); },
+    importText: importText, cleanState: cleanState, customCalc: customCalc, fill: fill, calc: calc,
+    deleteTile: function (id) { return deleteTile(id); },
+    pdf: function () { return makePdf(); }, model: function () { return docModel(); },
+    run: function () { var c = calc(S); return { c: c, p: prevCalc(S, c), m: MAT_DEFS.map(function (d) { return [d.id, matCalc(d.id, S, c)]; }) }; }
+  };
 
   /* percorsi dei campi */
   function getPath(o, p) { return p.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
@@ -911,6 +957,26 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     var ks = p.split('.'), last = ks.pop();
     var t = ks.reduce(function (a, k) { return a[k]; }, o);
     t[last] = v;
+  }
+
+  /* selettori di piastrella */
+  function tileOptionsHTML(selId) {
+    var sel = tileOf(S, selId).id;
+    return S.tiles.map(function (t) {
+      return '<option value="' + t.id + '"' + (t.id === sel ? ' selected' : '') + '>' + esc(tileName(S, t)) + '</option>';
+    }).join('');
+  }
+  function refreshTileOptions() {
+    var sels = document.querySelectorAll('select[data-f="tile"], select[data-tilesel]');
+    for (var i = 0; i < sels.length; i++) {
+      var sel = sels[i], want;
+      if (sel.dataset.tilesel) want = S.extra[sel.dataset.tilesel];
+      else {
+        var row = sel.closest('.room'), r = row && findRoom(Number(row.dataset.id));
+        want = r ? r.tile : null;
+      }
+      sel.innerHTML = tileOptionsHTML(want);
+    }
   }
 
   /* righe superficie */
@@ -922,6 +988,10 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     var h = '<div class="room' + (r.minus ? ' minus' : '') + '" data-id="' + r.id + '">';
     h += '<div class="span2"><label class="label" for="n' + pre + '">Nome</label>' +
       '<input type="text" class="name" id="n' + pre + '" data-f="name" value="' + esc(r.name) + '" autocomplete="off"></div>';
+    if (S.tiles.length > 1) {
+      h += '<div class="span2"><label class="label" for="t' + pre + '">Piastrella</label>' +
+        '<select id="t' + pre + '" data-f="tile">' + tileOptionsHTML(r.tile) + '</select></div>';
+    }
     if (!wall) {
       h += '<div class="span2"><label class="label" for="s' + pre + '">Forma</label><select id="s' + pre + '" data-f="shape">';
       Object.keys(SH).forEach(function (k) {
@@ -961,11 +1031,16 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     });
     box.addEventListener('change', function (e) {
       var row = e.target.closest('.room');
-      if (!row || e.target.dataset.f !== 'shape') return;
+      if (!row) return;
       var r = findRoom(Number(row.dataset.id));
       if (!r) return;
-      r.shape = e.target.value;
-      save(); renderRooms(kind); update();
+      if (e.target.dataset.f === 'shape') {
+        r.shape = e.target.value;
+        save(); renderRooms(kind); update();
+      } else if (e.target.dataset.f === 'tile') {
+        r.tile = Number(e.target.value);
+        save(); update();
+      }
     });
     box.addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-act]');
@@ -980,15 +1055,98 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       save(); renderRooms(kind); update();
     });
   }
+  function lastTileFor(kind) {
+    for (var i = S.rooms.length - 1; i >= 0; i--) if (S.rooms[i].kind === kind) return tileOf(S, S.rooms[i].tile).id;
+    return S.tiles[0].id;
+  }
   function addRoom(kind, minus) {
     var n = S.rooms.filter(function (x) { return x.kind === kind && !x.minus; }).length + 1;
     var name = minus ? (kind === 'wall' ? 'Porta o finestra' : 'Da sottrarre') : (kind === 'wall' ? 'Parete ' + n : 'Stanza ' + n);
-    S.rooms.push({ id: nid(), kind: kind, shape: 'rett', name: name, p0: '', p1: '', p2: '', p3: '', minus: minus });
+    S.rooms.push({ id: nid(), kind: kind, shape: 'rett', name: name, p0: '', p1: '', p2: '', p3: '', minus: minus, tile: lastTileFor(kind) });
     save(); renderRooms(kind); update();
     var box = $(kind === 'wall' ? 'walls' : 'floors');
     var last = box.lastElementChild, inp = last && last.querySelector('[data-f="p0"]');
     if (inp) inp.focus();
   }
+
+  /* piastrelle: schede */
+  function tileHTML(t, i) {
+    var pre = 'tl' + t.id, custom = t.posa === 'custom';
+    function fld(key, label) {
+      return '<div><label class="label" for="' + pre + key + '">' + label + '</label>' +
+        '<input type="text" id="' + pre + key + '" data-tf="' + key + '" inputmode="decimal" value="' + esc(t[key]) + '" autocomplete="off"></div>';
+    }
+    var posa = '<div><label class="label" for="' + pre + 'posa">Tipo di posa</label><select id="' + pre + 'posa" data-tf="posa">' +
+      [['dritta', 'Dritta (5%)'], ['diagonale', 'Diagonale (10%)'], ['spina', 'Spina di pesce (15%)'], ['custom', 'Personalizzato']].map(function (o) {
+        return '<option value="' + o[0] + '"' + (t.posa === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+      }).join('') + '</select></div>';
+    var sc = '<div><label class="label" for="' + pre + 'scarto">Scarto (%)</label>' +
+      '<input type="text" id="' + pre + 'scarto" data-tf="scarto" inputmode="decimal" value="' + esc(t.scarto) + '" autocomplete="off"' +
+      (custom ? '' : ' readonly style="opacity:0.7"') + '></div>';
+    return '<div class="cx tile" data-tid="' + t.id + '">' +
+      '<div class="span2"><label class="label" for="' + pre + 'name">Nome</label>' +
+      '<input type="text" class="name" id="' + pre + 'name" data-tf="name" value="' + esc(t.name) + '" placeholder="Piastrella ' + (i + 1) + '" autocomplete="off"></div>' +
+      fld('tw', 'Larghezza (cm)') + fld('th', 'Altezza (cm)') + fld('fuga', 'Fuga (mm)') + fld('spess', 'Spessore (mm)') +
+      fld('mqbox', 'Mq per scatola') + fld('prezzo', 'Prezzo (€/mq)') + posa + sc +
+      '<div class="span2 foot"><div class="mat-need" id="tc-use-' + t.id + '"></div>' +
+      (S.tiles.length > 1 ? '<button type="button" data-tdel aria-label="Elimina ' + esc(tileName(S, t)) + '">Elimina</button>' : '') +
+      '</div></div>';
+  }
+  function renderTiles() {
+    $('tiles').innerHTML = S.tiles.map(tileHTML).join('');
+  }
+  function findTile(id) { return S.tiles.find(function (x) { return x.id === id; }); }
+  function deleteTile(id) {
+    if (S.tiles.length < 2) return 0;
+    var t = findTile(id);
+    if (!t) return 0;
+    S.tiles = S.tiles.filter(function (x) { return x.id !== id; });
+    var first = S.tiles[0], moved = 0;
+    S.rooms.forEach(function (r) { if (r.tile === id) { r.tile = first.id; moved++; } });
+    if (Number(S.extra.gTile) === id) S.extra.gTile = '';
+    if (Number(S.extra.pzTile) === id) S.extra.pzTile = '';
+    save(); renderTiles(); renderRooms('floor'); renderRooms('wall'); refreshTileOptions(); update();
+    if (moved) toast(moved + (moved === 1 ? ' superficie spostata su ' : ' superfici spostate su ') + tileName(S, first));
+    return moved;
+  }
+  var tileArm = null;
+  $('tiles').addEventListener('input', function (e) {
+    var box = e.target.closest('.cx');
+    if (!box || !e.target.dataset.tf || e.target.tagName === 'SELECT') return;
+    var t = findTile(Number(box.dataset.tid));
+    if (!t) return;
+    t[e.target.dataset.tf] = e.target.value;
+    if (e.target.dataset.tf === 'name') refreshTileOptions();
+    save(); update();
+  });
+  $('tiles').addEventListener('change', function (e) {
+    var box = e.target.closest('.cx');
+    if (!box || e.target.dataset.tf !== 'posa') return;
+    var t = findTile(Number(box.dataset.tid));
+    if (!t) return;
+    t.posa = e.target.value;
+    if (t.posa !== 'custom') t.scarto = String(POSE[t.posa]);
+    save(); renderTiles(); update();
+  });
+  $('tiles').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-tdel]');
+    if (!b) return;
+    var id = Number(b.closest('.cx').dataset.tid);
+    if (b.dataset.armed !== '1') {
+      b.dataset.armed = '1'; b.classList.add('armed'); b.textContent = 'Conferma';
+      clearTimeout(tileArm);
+      tileArm = setTimeout(function () { b.dataset.armed = ''; b.classList.remove('armed'); b.textContent = 'Elimina'; }, 3000);
+      return;
+    }
+    deleteTile(id);
+  });
+  $('add-tile').addEventListener('click', function () {
+    var last = S.tiles[S.tiles.length - 1];
+    S.tiles.push(newTile({ tw: last.tw, th: last.th, fuga: last.fuga, spess: last.spess, posa: last.posa, scarto: last.scarto, mqbox: '', prezzo: '' }));
+    save(); renderTiles(); renderRooms('floor'); renderRooms('wall'); refreshTileOptions(); update();
+    var box = $('tiles').lastElementChild, inp = box && box.querySelector('[data-tf="name"]');
+    if (inp) inp.focus();
+  });
 
   /* materiali: schede */
   function buildMats() {
@@ -1075,14 +1233,15 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   $('save-job').addEventListener('click', saveJob);
   $('new-job').addEventListener('click', function () {
     var b = defaultState(false);
-    b.tw = S.tw; b.th = S.th; b.fuga = S.fuga; b.mqbox = S.mqbox; b.prezzo = S.prezzo;
-    b.posa = S.posa; b.scarto = S.scarto; b.wallH = S.wallH;
-    b.mat = JSON.parse(JSON.stringify(S.mat));
+    function clone(o) { return JSON.parse(JSON.stringify(o)); }
+    b.tiles = S.tiles.map(function (t) { return Object.assign({}, t, { id: nid() }); });
+    b.wallH = S.wallH;
+    b.mat = clone(S.mat);
     b.prev.posa = S.prev.posa; b.prev.ricarico = S.prev.ricarico; b.prev.iva = S.prev.iva;
     b.prev.ditta = S.prev.ditta; b.prev.contatti = S.prev.contatti; b.prev.show = S.prev.show; b.prev.note = S.prev.note;
-    b.extra = JSON.parse(JSON.stringify(S.extra));
-    b.custom = JSON.parse(JSON.stringify(S.custom));
-    b.rooms = [{ id: nid(), kind: 'floor', shape: 'rett', name: 'Stanza 1', p0: '', p1: '', p2: '', p3: '', minus: false }];
+    b.extra = clone(S.extra); b.extra.gTile = ''; b.extra.pzTile = '';
+    b.custom = clone(S.custom);
+    b.rooms = [{ id: nid(), kind: 'floor', shape: 'rett', name: 'Stanza 1', p0: '', p1: '', p2: '', p3: '', minus: false, tile: b.tiles[0].id }];
     S = b; save(); renderAll(); setTab('calc'); toast('Nuovo lavoro');
   });
   var armTimer = null;
@@ -1137,7 +1296,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     return { id: S.jobId, name: S.jobName || S.client || 'Lavoro senza nome', client: S.client, saved: new Date().toISOString(), state: copy };
   }
   function exportJobs(jobs, base) {
-    var data = { app: 'calcolo-piastrelle', version: 1, exported: new Date().toISOString(), jobs: jobs };
+    var data = { app: 'calcolo-piastrelle', version: 2, exported: new Date().toISOString(), jobs: jobs };
     var blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     return deliverFile(blob, safeName(base) + '.json', 'Calcolo Piastrelle', 'File salvato');
   }
@@ -1145,32 +1304,54 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   function cleanState(d) {
     d = d && typeof d === 'object' ? d : {};
     var b = defaultState(false), o = defaultState(false);
-    function s(v, def) { return (typeof v === 'string' || typeof v === 'number') ? String(v).slice(0, 300) : def; }
     var own = function (obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); };
-    ['tw', 'th', 'fuga', 'mqbox', 'prezzo', 'scarto', 'wallH', 'jobName', 'client', 'address'].forEach(function (k) { o[k] = s(d[k], b[k]); });
-    o.posa = (d.posa === 'custom' || (typeof d.posa === 'string' && own(POSE, d.posa))) ? d.posa : 'dritta';
+    function s(v, def) { return (typeof v === 'string' || typeof v === 'number') ? String(v).slice(0, 300) : def; }
+    ['wallH', 'jobName', 'client', 'address'].forEach(function (k) { o[k] = s(d[k], b[k]); });
     o.inclWalls = !!d.inclWalls;
+
+    var map = {}, src;
+    if (Array.isArray(d.tiles) && d.tiles.length) src = d.tiles;
+    else {
+      var lg = {};
+      LEGACY_TILE_KEYS.forEach(function (k) { lg[k] = d[k]; });
+      lg.spess = d.mat && typeof d.mat === 'object' && d.mat.fugante && typeof d.mat.fugante === 'object' ? d.mat.fugante.spess : undefined;
+      src = [lg];
+    }
+    o.tiles = src.slice(0, 30).map(function (x) {
+      x = x && typeof x === 'object' ? x : {};
+      var t = newTile();
+      ['name', 'tw', 'th', 'fuga', 'spess', 'mqbox', 'prezzo', 'scarto'].forEach(function (k) { t[k] = s(x[k], t[k]); });
+      t.posa = (x.posa === 'custom' || (typeof x.posa === 'string' && own(POSE, x.posa))) ? x.posa : 'dritta';
+      if (x.id != null) map[String(x.id)] = t.id;
+      return t;
+    });
+
     Object.keys(b.mat).forEach(function (id) {
-      var src = d.mat && typeof d.mat[id] === 'object' && d.mat[id] ? d.mat[id] : {};
-      Object.keys(b.mat[id]).forEach(function (k) { o.mat[id][k] = s(src[k], b.mat[id][k]); });
+      var m0 = d.mat && typeof d.mat === 'object' ? d.mat[id] : null;
+      var m = m0 && typeof m0 === 'object' ? m0 : {};
+      Object.keys(b.mat[id]).forEach(function (k) { o.mat[id][k] = s(m[k], b.mat[id][k]); });
     });
     var pv = d.prev && typeof d.prev === 'object' ? d.prev : {};
     ['ditta', 'contatti', 'note', 'posa', 'ricarico', 'iva'].forEach(function (k) { o.prev[k] = s(pv[k], b.prev[k]); });
     o.prev.show = (pv.show === 'totale' || pv.show === 'nessuno') ? pv.show : 'tutti';
     o.prev.extras = (Array.isArray(pv.extras) ? pv.extras : []).slice(0, 50).map(function (x) {
-      x = x || {};
+      x = x && typeof x === 'object' ? x : {};
       return { id: nid(), desc: s(x.desc, ''), amt: s(x.amt, '') };
     });
     var ex = d.extra && typeof d.extra === 'object' ? d.extra : {};
     Object.keys(b.extra).forEach(function (k) { o.extra[k] = s(ex[k], b.extra[k]); });
+    ['gTile', 'pzTile'].forEach(function (k) {
+      o.extra[k] = (ex[k] != null && map[String(ex[k])]) ? String(map[String(ex[k])]) : '';
+    });
     o.custom = (Array.isArray(d.custom) ? d.custom : []).slice(0, 50).map(function (x) {
-      x = x || {};
+      x = x && typeof x === 'object' ? x : {};
       return { id: nid(), name: s(x.name, ''), mode: x.mode === 'mq' ? 'mq' : 'fissa', val: s(x.val, ''), unit: s(x.unit, ''), pack: s(x.pack, ''), price: s(x.price, '') };
     });
     o.rooms = (Array.isArray(d.rooms) ? d.rooms : []).slice(0, 200).map(function (r) {
-      r = r || {};
+      r = r && typeof r === 'object' ? r : {};
       return { id: nid(), kind: r.kind === 'wall' ? 'wall' : 'floor', shape: (typeof r.shape === 'string' && own(SH, r.shape)) ? r.shape : 'rett',
-        name: s(r.name, ''), p0: s(r.p0, ''), p1: s(r.p1, ''), p2: s(r.p2, ''), p3: s(r.p3, ''), minus: !!r.minus };
+        name: s(r.name, ''), p0: s(r.p0, ''), p1: s(r.p1, ''), p2: s(r.p2, ''), p3: s(r.p3, ''), minus: !!r.minus,
+        tile: (r.tile != null && map[String(r.tile)]) ? map[String(r.tile)] : o.tiles[0].id };
     });
     o.isSample = false; o.jobId = null;
     return o;
@@ -1306,45 +1487,56 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       var el = els[i], v = getPath(S, el.dataset.bind);
       if (el.type === 'checkbox') el.checked = !!v; else el.value = v == null ? '' : v;
     }
-    var sc = $('scarto');
-    sc.readOnly = S.posa !== 'custom';
-    sc.style.opacity = S.posa !== 'custom' ? '0.7' : '1';
   }
   document.addEventListener('input', function (e) {
     var el = e.target;
     if (!el.dataset || !el.dataset.bind) return;
     setPath(S, el.dataset.bind, el.type === 'checkbox' ? el.checked : el.value);
-    if (el.dataset.bind === 'posa') {
-      if (S.posa !== 'custom') S.scarto = String(POSE[S.posa]);
-      setInputs();
-    }
     save(); update();
   });
   document.addEventListener('change', function (e) {
     var el = e.target;
-    if (el && el.type === 'checkbox' && el.dataset.bind) {
+    if (!el || !el.dataset) return;
+    if (el.type === 'checkbox' && el.dataset.bind) {
       setPath(S, el.dataset.bind, el.checked); save(); update();
+    } else if (el.dataset.tilesel) {
+      S.extra[el.dataset.tilesel] = el.value; save(); update();
     }
   });
 
   /* testi da copiare */
+  function tileQty(x) {
+    return x.box > 0
+      ? x.scatole + (x.scatole === 1 ? ' scatola' : ' scatole') + ' (' + fmt(x.acq, 2) + ' m²)'
+      : fmt(x.lordo, 2) + ' m²';
+  }
+  function tileRowLabel(s, x, multi) {
+    var t = x.t, dim = fmtN(num(t.tw)) + '×' + fmtN(num(t.th)) + ' cm';
+    var base = t.name ? t.name : (multi ? 'Piastrella ' + (s.tiles.indexOf(t) + 1) : 'Piastrelle');
+    return base + ' ' + dim;
+  }
   function calcText() {
-    var c = calc(S), L = ['Calcolo piastrelle' + (S.jobName ? ' - ' + S.jobName : '')];
+    var c = calc(S), multi = S.tiles.length > 1;
+    var L = ['Calcolo piastrelle' + (S.jobName ? ' - ' + S.jobName : '')];
     S.rooms.forEach(function (r) {
-      L.push((r.minus ? '− ' : '+ ') + (r.name || 'Superficie') + (r.kind === 'wall' ? ' (parete)' : '') + ': ' + fmt(areaOf(r), 2) + ' m²');
+      L.push((r.minus ? '− ' : '+ ') + (r.name || 'Superficie') + (r.kind === 'wall' ? ' (parete)' : '') +
+        (multi ? ' [' + tileName(S, tileOf(S, r.tile)) + ']' : '') + ': ' + fmt(areaOf(r), 2) + ' m²');
     });
     L.push('Netto: ' + fmt(c.net, 2) + ' m²');
-    L.push('Scarto ' + fmt(c.pct, 1) + '%: ' + fmt(c.lordo, 2) + ' m²');
-    L.push('Piastrella ' + fmtN(num(S.tw)) + '×' + fmtN(num(S.th)) + ' cm, fuga ' + fmtN(num(S.fuga)) + ' mm');
-    L.push('Piastrelle: ' + fmt(c.pezzi, 0));
-    if (c.box > 0) L.push('Scatole: ' + fmt(c.scatole, 0) + ' (' + fmt(c.acq, 2) + ' m²)');
-    if (num(S.prezzo) > 0) L.push('Costo piastrelle: ' + eur(c.costo));
+    c.used.forEach(function (x) {
+      L.push(tileRowLabel(S, x, multi) + ', fuga ' + fmtN(num(x.t.fuga)) + ' mm, scarto ' + fmt(x.pct, 1) + '%');
+      L.push((multi ? '  ' : '') + fmt(x.net, 2) + ' m² netti, ' + fmt(x.lordo, 2) + ' m² con scarto, ' + fmt(x.pezzi, 0) + ' piastrelle' +
+        (x.box > 0 ? ', ' + tileQty(x) : '') + (num(x.t.prezzo) > 0 ? ', ' + eur(x.costo) : ''));
+    });
+    if (multi) {
+      L.push('Totale: ' + fmt(c.lordo, 2) + ' m² con scarto, ' + fmt(c.pezzi, 0) + ' piastrelle' +
+        (c.hasBox ? ', ' + fmt(c.scatole, 0) + ' scatole' : '') + (c.costo > 0 ? ', ' + eur(c.costo) : ''));
+    }
     return L.join('\n');
   }
   function matText() {
-    var c = calc(S), L = ['Lista materiali' + (S.jobName ? ' - ' + S.jobName : '')];
-    if (c.box > 0) L.push('Piastrelle: ' + c.scatole + (c.scatole === 1 ? ' scatola' : ' scatole') + ' (' + fmt(c.acq, 2) + ' m²)');
-    else L.push('Piastrelle: ' + fmt(c.lordo, 2) + ' m²');
+    var c = calc(S), multi = S.tiles.length > 1, L = ['Lista materiali' + (S.jobName ? ' - ' + S.jobName : '')];
+    c.used.forEach(function (x) { L.push(tileRowLabel(S, x, multi) + ': ' + tileQty(x)); });
     MAT_DEFS.forEach(function (d) {
       var m = matCalc(d.id, S, c);
       if (m.need > 0 && m.packs > 0) {
@@ -1357,15 +1549,13 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     });
     return L.join('\n');
   }
+
   /* modello del documento: stesse voci per testo e PDF, con o senza prezzi */
   function docModel() {
-    var c = calc(S), p = prevCalc(S, c), mode = S.prev.show || 'tutti', pr = mode === 'tutti';
+    var c = calc(S), p = prevCalc(S, c), mode = S.prev.show || 'tutti', pr = mode === 'tutti', multi = S.tiles.length > 1;
     function nz(v) { return pr && v > 0 ? v : null; }
     var rows = [];
-    var tq = c.box > 0
-      ? c.scatole + (c.scatole === 1 ? ' scatola' : ' scatole') + ' (' + fmt(c.acq, 2) + ' m²)'
-      : fmt(c.lordo, 2) + ' m²';
-    rows.push({ label: 'Piastrelle ' + fmtN(num(S.tw)) + '×' + fmtN(num(S.th)) + ' cm', qty: tq, amt: nz(p.tile) });
+    c.used.forEach(function (x) { rows.push({ label: tileRowLabel(S, x, multi), qty: tileQty(x), amt: nz(x.costo) }); });
     MAT_DEFS.forEach(function (d) {
       var m = matCalc(d.id, S, c);
       if (m.need > 0 && m.packs > 0) {
@@ -1382,7 +1572,8 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       if (x.desc || snum(x.amt) !== 0) rows.push({ label: x.desc || 'Altra voce', qty: '', amt: pr && snum(x.amt) !== 0 ? snum(x.amt) : null });
     });
     var surf = S.rooms.filter(function (r) { return areaOf(r) > 0; }).map(function (r) {
-      return { label: (r.minus ? '− ' : '') + (r.name || 'Superficie') + (r.kind === 'wall' ? ' (parete)' : ''), qty: fmt(areaOf(r), 2) + ' m²' };
+      return { label: (r.minus ? '− ' : '') + (r.name || 'Superficie') + (r.kind === 'wall' ? ' (parete)' : '') +
+        (multi ? ' · ' + tileName(S, tileOf(S, r.tile)) : ''), qty: fmt(areaOf(r), 2) + ' m²' };
     });
     return {
       title: mode === 'nessuno' ? 'Computo materiali' : 'Preventivo',
@@ -1570,7 +1761,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       head('Superfici');
       m.surf.forEach(function (r) { line(r.label, r.qty, null, false, false); });
       line('Superficie netta', fmt(m.c.net, 2) + ' m²', null, true, false);
-      line('Scarto ' + fmt(m.c.pct, 1) + '%', fmt(m.c.lordo - m.c.net, 2) + ' m²', null, false, false);
+      line('Scarto' + (m.c.pct != null ? ' ' + fmt(m.c.pct, 1) + '%' : ''), fmt(m.c.lordo - m.c.net, 2) + ' m²', null, false, false);
       line('Superficie con scarto', fmt(m.c.lordo, 2) + ' m²', null, true, false);
     }
 
@@ -1593,10 +1784,10 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       doc.text('Pagina ' + i + ' di ' + pages, 105, 289, { align: 'center' });
     }
 
-    var base = (S.jobName || S.client || 'lavoro').replace(/[^\wÀ-ſ \-]+/g, '').trim() || 'lavoro';
-    var name = m.title + ' - ' + base + '.pdf';
+    var name = m.title + ' - ' + safeName(S.jobName || S.client) + '.pdf';
     return deliverFile(doc.output('blob'), name, m.title, 'PDF salvato');
   }
+
   var tt;
   function toast(msg) {
     var t = $('toast');
@@ -1644,28 +1835,56 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   $('add-wall').addEventListener('click', function () { addRoom('wall', false); });
   $('add-wall-minus').addEventListener('click', function () { addRoom('wall', true); });
   $('wall-perim').addEventListener('click', function () {
-    var c = calc(S);
-    if (!(c.per > 0)) { toast('Inserisci prima le stanze'); return; }
-    S.rooms.push({ id: nid(), kind: 'wall', shape: 'rett', name: 'Pareti (perimetro)', p0: fmtInput(c.per), p1: S.wallH, p2: '', p3: '', minus: false });
+    var floors = S.rooms.filter(function (r) { return r.kind === 'floor' && !r.minus && perimOf(r) > 0; });
+    if (!floors.length) { toast('Inserisci prima le stanze'); return; }
+    floors.forEach(function (r) {
+      S.rooms.push({ id: nid(), kind: 'wall', shape: 'rett', name: 'Pareti ' + (r.name || 'stanza'), p0: fmtInput(perimOf(r)), p1: S.wallH,
+        p2: '', p3: '', minus: false, tile: r.tile });
+    });
     S.inclWalls = true;
     save(); setInputs(); renderRooms('wall'); update();
-    toast('Aggiunta parete lunga come il perimetro');
+    toast(floors.length === 1 ? 'Aggiunta una parete lunga come il perimetro' : 'Aggiunte ' + floors.length + ' pareti dal perimetro');
   });
+
+  /* riepilogo di una piastrella */
+  function tileBlockHTML(x) {
+    var rows = [
+      ['Superficie netta', fmt(x.net, 2) + ' m²', ''],
+      ['Scarto ' + fmt(x.pct, 1) + '%', fmt(x.lordo - x.net, 2) + ' m²', ''],
+      ['Con scarto', fmt(x.lordo, 2) + ' m²', ''],
+      ['Piastrelle (fuga inclusa)', x.pezzi ? fmt(x.pezzi, 0) + ' pz' : '–', ''],
+      ['Scatole', x.box > 0 ? fmt(x.scatole, 0) : 'inserisci mq/scatola', 'strong'],
+      ['Mq acquistati', fmt(x.acq, 2) + ' m²', ''],
+      ['Costo', num(x.t.prezzo) > 0 ? eur(x.costo) : '–', '']
+    ];
+    var h = '<div class="tblock"><h3>' + esc(tileRowLabel(S, x, true)) + '</h3><dl class="results">';
+    rows.forEach(function (r) {
+      h += '<dt' + (r[2] ? ' class="' + r[2] + '"' : '') + '>' + esc(r[0]) + '</dt><dd' + (r[2] ? ' class="' + r[2] + '"' : '') + '>' + esc(r[1]) + '</dd>';
+    });
+    return h + '</dl></div>';
+  }
 
   /* aggiornamento */
   function update() {
-    var c = calc(S), p = prevCalc(S, c);
+    var c = calc(S), p = prevCalc(S, c), multi = S.tiles.length > 1;
+    c.byTile.forEach(function (x) {
+      setT('tc-use-' + x.t.id, x.n > 0
+        ? 'Usata in ' + x.n + (x.n === 1 ? ' superficie' : ' superfici') + ' · ' + fmt(x.net, 2) + ' m² netti'
+        : 'Nessuna superficie assegnata');
+    });
+    $('r-per').innerHTML = multi ? c.byTile.filter(function (x) { return x.n > 0; }).map(tileBlockHTML).join('') : '';
+    $('r-tot-h').hidden = !multi;
     setT('r-floor', fmt(c.fl, 2) + ' m²');
     setT('r-wall', S.inclWalls ? fmt(c.wl, 2) + ' m²' : 'non incluse');
     setT('r-net', fmt(c.net, 2) + ' m²');
-    setT('r-pct', fmt(c.pct, 1) + ' %');
+    setT('r-pct', c.pct != null ? fmt(c.pct, 1) + ' %' : 'diverso per piastrella');
     setT('r-lordo', fmt(c.lordo, 2) + ' m²');
     setT('r-pezzi', c.pezzi ? fmt(c.pezzi, 0) + ' pz' : '–');
-    setT('r-box', c.box > 0 ? fmt(c.scatole, 0) : 'inserisci mq/scatola');
+    setT('r-box', c.hasBox ? fmt(c.scatole, 0) : 'inserisci mq/scatola');
     setT('r-acq', fmt(c.acq, 2) + ' m²');
     setT('r-extra', fmt(Math.max(0, c.acq - c.net), 2) + ' m²');
-    setT('r-costo', num(S.prezzo) > 0 ? eur(c.costo) : '–');
-    setT('r-note', c.box > 0
+    setT('r-costo', c.costo > 0 ? eur(c.costo) : '–');
+    setT('r-note', c.hasBox
       ? 'Le scatole sono arrotondate per eccesso. Il costo è calcolato sui mq acquistati.'
       : 'Senza i mq per scatola il costo si calcola sui mq con scarto.');
 
@@ -1673,7 +1892,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
       var m = matCalc(d.id, S, c);
       setT('m-packs-' + d.id, m.packs > 0 ? m.packs + ' ' + d.pack[m.packs === 1 ? 0 : 1] : '–');
       var need = 'Fabbisogno: ' + fmt(m.need, 1) + ' ' + d.unit;
-      if (d.id === 'fugante') need += ' · consumo calcolato ' + fmt(m.k, 3) + ' kg/m²';
+      if (d.id === 'fugante') need += ' · consumo ' + (multi ? 'medio ' : 'calcolato ') + fmt(m.k, 3) + ' kg/m²';
       setT('m-need-' + d.id, need);
       setT('m-cost-' + d.id, num(S.mat[d.id].price) > 0 && m.packs > 0 ? 'Costo: ' + eur(m.cost) : 'Inserisci il prezzo per avere il costo.');
     });
@@ -1697,18 +1916,21 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     var x = S.extra;
     setT('x-pend', fmt(num(x.pL) * num(x.pPct), 1) + ' cm');
     var g = num(x.gN) * (num(x.gAl) + num(x.gPe)) * num(x.gW) / 10000;
+    var gt = tileOf(S, x.gTile), pt = tileOf(S, x.pzTile);
     setT('x-grad', fmt(g, 2) + ' m²');
-    setT('x-grad-s', fmt(g * (1 + c.pct / 100), 2) + ' m²');
+    setT('x-grad-s', fmt(g * (1 + pctOf(gt) / 100), 2) + ' m²');
     setT('x-grad-ml', fmt(num(x.gN) * num(x.gW) / 100, 2) + ' m');
-    setT('x-pz', fmt(num(x.pzBox) * num(S.tw) * num(S.th) / 10000, 2) + ' m²');
+    setT('x-pz', fmt(num(x.pzBox) * num(pt.tw) * num(pt.th) / 10000, 2) + ' m²');
 
-    setT('b-box', c.box > 0 ? fmt(c.scatole, 0) + (c.scatole === 1 ? ' scatola' : ' scatole') : fmt(c.lordo, 2) + ' m²');
-    setT('b-sub', fmt(c.net, 2) + ' m² netti, scarto ' + fmt(c.pct, 0) + '%' + (p.tot > 0 ? ' · totale ' + eur(p.tot) : ''));
+    setT('b-box', c.hasBox ? fmt(c.scatole, 0) + (c.scatole === 1 ? ' scatola' : ' scatole') : fmt(c.lordo, 2) + ' m²');
+    setT('b-sub', fmt(c.net, 2) + ' m² netti' + (c.pct != null ? ', scarto ' + fmt(c.pct, 0) + '%' : ', scarti diversi') +
+      (p.tot > 0 ? ' · totale ' + eur(p.tot) : ''));
     $('sample').hidden = !S.isSample;
   }
 
   function renderAll() {
-    setInputs(); renderRooms('floor'); renderRooms('wall'); renderCustom(); renderExtras(); renderJobs(); update();
+    renderTiles(); renderRooms('floor'); renderRooms('wall'); renderCustom(); renderExtras();
+    setInputs(); refreshTileOptions(); renderJobs(); update();
   }
 
   wireRooms('floor');

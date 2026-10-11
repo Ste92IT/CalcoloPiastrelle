@@ -20,6 +20,9 @@ Lavori su piu' dispositivi: scheda Lavori > Esporta (crea un file .json da manda
   e, sull'altro dispositivo, Importa lavori. Un lavoro piu' recente aggiorna quello gia' presente,
   uno piu' vecchio viene aggiunto come copia.
 
+Piastrelle diverse nella stessa casa: scheda Calcolo > Piastrelle > Aggiungi piastrella, poi scegli la piastrella
+  in ogni superficie. Ogni piastrella ha misure, fuga, spessore, scatola, prezzo, posa e scarto.
+
 Aggiornare: ricarica index.html su GitHub (Add file > Upload files, stesso nome). Il telefono si aggiorna
 alla prima apertura con internet.
 Se cambi il contenuto di un file diverso da index.html, cambia anche CACHE in sw.js (es. v2).
