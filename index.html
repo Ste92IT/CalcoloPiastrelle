@@ -548,7 +548,7 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
   <section class="card" aria-labelledby="h-jobs">
     <div>
       <h2 id="h-jobs">Lavori salvati</h2>
-      <p class="hint">I lavori restano nel browser di questo dispositivo.</p>
+      <p class="hint">I lavori restano nel browser di questo dispositivo. "Nuovo lavoro" azzera tutti i campi: salva prima quello attuale.</p>
     </div>
     <div class="add-row">
       <button type="button" class="primary" id="save-job">Salva lavoro</button>
@@ -1231,18 +1231,24 @@ dl.results dd.total { color: var(--accent); font-weight: 600; font-size: 1.1rem;
     renderJobs();
   }
   $('save-job').addEventListener('click', saveJob);
+  /* nuovo lavoro: riparte da zero, come alla prima apertura ma senza i dati di esempio */
+  var newArm = null;
+  function startNewJob() {
+    S = defaultState(false);
+    S.rooms = [{ id: nid(), kind: 'floor', shape: 'rett', name: 'Stanza 1', p0: '', p1: '', p2: '', p3: '', minus: false, tile: S.tiles[0].id }];
+    save(); renderAll(); setTab('calc'); toast('Nuovo lavoro vuoto');
+  }
   $('new-job').addEventListener('click', function () {
-    var b = defaultState(false);
-    function clone(o) { return JSON.parse(JSON.stringify(o)); }
-    b.tiles = S.tiles.map(function (t) { return Object.assign({}, t, { id: nid() }); });
-    b.wallH = S.wallH;
-    b.mat = clone(S.mat);
-    b.prev.posa = S.prev.posa; b.prev.ricarico = S.prev.ricarico; b.prev.iva = S.prev.iva;
-    b.prev.ditta = S.prev.ditta; b.prev.contatti = S.prev.contatti; b.prev.show = S.prev.show; b.prev.note = S.prev.note;
-    b.extra = clone(S.extra); b.extra.gTile = ''; b.extra.pzTile = '';
-    b.custom = clone(S.custom);
-    b.rooms = [{ id: nid(), kind: 'floor', shape: 'rett', name: 'Stanza 1', p0: '', p1: '', p2: '', p3: '', minus: false, tile: b.tiles[0].id }];
-    S = b; save(); renderAll(); setTab('calc'); toast('Nuovo lavoro');
+    var btn = $('new-job');
+    if (btn.dataset.armed !== '1') {
+      btn.dataset.armed = '1'; btn.classList.add('armed'); btn.textContent = 'Conferma: azzera tutto';
+      clearTimeout(newArm);
+      newArm = setTimeout(function () { btn.dataset.armed = ''; btn.classList.remove('armed'); btn.textContent = 'Nuovo lavoro'; }, 3500);
+      return;
+    }
+    clearTimeout(newArm);
+    btn.dataset.armed = ''; btn.classList.remove('armed'); btn.textContent = 'Nuovo lavoro';
+    startNewJob();
   });
   var armTimer = null;
   $('jobs').addEventListener('click', function (e) {
